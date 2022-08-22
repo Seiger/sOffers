@@ -1,0 +1,36 @@
+{
+    "name": "seiger/soffers",
+    "license": "GPL-3.0",
+    "type": "EvolutionCMS-Module",
+    "description": "Module for records management in the Evolution CMS admin panel.",
+    "keywords": ["evocms", "evolution-cms"],
+    "authors": [
+        {
+            "name": "Serhii Korneliuk",
+            "email": "info@seigerit.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Seiger\\sOffers\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Seiger\\sOffers\\sOfferServiceProvider"
+            ],
+            "aliases": {
+                "sOffers": "Seiger\\sOffers\\Facades\\sOffers"
+            }
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "php artisan migrate"
+        ]
+    }
+}
