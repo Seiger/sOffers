@@ -3,6 +3,7 @@
  * Offers management module
  */
 
+use Illuminate\Support\Str;
 use Seiger\sOffers\Controllers\sOfferController;
 use Seiger\sOffers\Models\sOFeature;
 use Seiger\sOffers\Models\sOffer;
@@ -22,7 +23,7 @@ switch ($data['get']) {
     default:
         $data['tabs'] = ['offers', 'features'];
         if (evo()->hasPermission('settings')) {
-            //$data['tabs'][] = 'settings';
+            $data['tabs'][] = 'settings';
         }
         break;
     case "offer":
@@ -132,6 +133,47 @@ switch ($data['get']) {
             }
         }
         $back = request()->back ?? '&get=features';
+        return header('Location: ' . $sOfferController->url . $back);
+    case "settings":
+        $data['tabs'] = ['offers', 'features'];
+        if (evo()->hasPermission('settings')) {
+            $data['tabs'][] = 'settings';
+        } else {
+            $back = request()->back ?? '&get=offers';
+            return header('Location: ' . $sOfferController->url . $back);
+        }
+        break;
+    case "settingsSave":
+        $keys = request()->input('settings.key', []);
+        $settings = [];
+        if (count($keys)) {
+            foreach ($keys as $idx => $key) {
+                $key = Str::slug($key);
+                $key = Str::lower($key);
+                $settings[$key] = [
+                    'key' => $key,
+                    'name' => request()->input('settings')['name'][$idx],
+                    'type' => request()->input('settings')['type'][$idx],
+                ];
+            }
+        }
+
+        $f = fopen(MODX_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php', "w");
+        fwrite($f, '<?php return [' . "\r\n");
+        if (count($settings)) {
+            foreach ($settings as $key => $setting) {
+                if (trim($key)) {
+                    fwrite($f, "\t'" . $key . "' => [" . "\r\n");
+                    foreach ($setting as $k => $v) {
+                        fwrite($f, "\t\t'" . $k . "' => '" . $v . "',\r\n");
+                    }
+                    fwrite($f, "\t]" . ",\r\n");
+                }
+            }
+        }
+        fwrite($f, "];");
+        fclose($f);
+        $back = request()->back ?? '&get=settings';
         return header('Location: ' . $sOfferController->url . $back);
 }
 

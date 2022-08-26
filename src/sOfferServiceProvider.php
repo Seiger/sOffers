@@ -29,6 +29,7 @@ class sOfferServiceProvider extends ServiceProvider
             // For use config
             $this->publishes([
                 dirname(__DIR__) . '/config/sOffersAlias.php' => config_path('app/aliases/sOffers.php', true),
+                dirname(__DIR__) . '/config/sOffer.php' => config_path('cms/settings/sOffer.php', true),
                 dirname(__DIR__) . '/images/noimage.png' => public_path('assets/images/noimage.png', true),
             ]);
         }

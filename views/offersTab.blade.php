@@ -36,7 +36,7 @@
                         <a href="{{$url}}&get=offer&i={{$offer->id}}" class="btn btn-outline-success">
                             <i class="fa fa-pencil"></i> <span>@lang('global.edit')</span>
                         </a>
-                        <a href="#" data-href="{{$url}}&get=offerDelete&i={{$offer->id}}" data-toggle="modal" data-target="#confirmDelete" data-id="{{$offer->id}}" data-name="{{$offer->pagetitle}}" class="btn btn-outline-danger">
+                        <a href="#" data-href="{{$url}}&get=offerDelete&i={{$offer->id}}" data-delete="{{$offer->id}}" data-name="{{$offer->pagetitle}}" class="btn btn-outline-danger">
                             <i class="fa fa-trash"></i> <span>@lang('global.remove')</span>
                         </a>
                     </div>
@@ -55,21 +55,6 @@
             <a id="Button2" href="{!!$url!!}&get=offer&i=0" class="btn btn-primary" title="@lang('sOffers::global.add_help')">
                 <i class="fa fa-plus"></i> <span>@lang('global.add')</span>
             </a>
-        </div>
-    </div>
-
-    <div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">@lang('sOffers::global.confirm_delete')</div>
-                <div class="modal-body">
-                    @lang('sOffers::global.you_sure') <b id="confirm-name"></b> @lang('sOffers::global.with_id') <b id="confirm-id"></b>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">@lang('global.cancel')</button>
-                    <a class="btn btn-danger btn-ok">@lang('global.remove')</a>
-                </div>
-            </div>
         </div>
     </div>
 

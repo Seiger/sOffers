@@ -44,6 +44,7 @@
     .custom-select{font-size:0.8125rem;}
     .tab-row .tab .fas{margin-right:0.5em;font-size:0.875rem;}
     #Button3{color:#fff;}
+    .alertify .ajs-footer .ajs-buttons .ajs-button.ajs-ok {color:#fff;background-color:#d9534f;border-color:#d9534f;}
     @media (max-width: 840px) {
         #action-btns{width:80px;}
         #actions .btn-group .btn .fas, #_actions .btn-group .btn .fas,

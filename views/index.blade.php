@@ -74,11 +74,13 @@
 
 @push('scripts.bot')
     {!!$editor!!}
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
     <script src="media/script/jquery.quicksearch.js"></script>
     <script src="media/script/jquery.nucontextmenu.js"></script>
     <script src="media/script/bootstrap/js/bootstrap.min.js"></script>
     <script src="actions/resources/functions.js"></script>
-    <script type="text/javascript" src="media/calendar/datepicker.js"></script>
+    <script src="media/calendar/datepicker.js"></script>
     <script>
         $(document).ready(function () {
             $('.select2').select2();
@@ -99,6 +101,29 @@
                 $(this).find('#confirm-id').text($(e.relatedTarget).data('id'));
                 $(this).find('#confirm-name').text($(e.relatedTarget).data('name'));
                 $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+            });
+
+            /* Delete item */
+            $(document).on("click", "[data-delete]", function(e) {
+                var _this = $(this);
+                console.log(_this.attr('data-delete'));
+                alertify
+                    .confirm(
+                        "@lang('sOffers::global.confirm_delete')",
+                        "@lang('sOffers::global.you_sure') <b>"+_this.attr('data-name')+"</b> @lang('sOffers::global.with_id') <b>"+_this.attr('data-delete')+"</b>",
+                        function() {
+                            alertify.success("@lang('sOffers::global.deleted')");
+                            window.location.href = _this.attr('data-href');
+                        },
+                        function() {
+                            alertify.error("@lang('global.cancel')");
+                        })
+                    .set('labels', {
+                        ok:"@lang('global.delete')",
+                        cancel:"@lang('global.cancel')"
+                    })
+                    .set({transition:'zoom'});
+                return false;
             });
         });
 
