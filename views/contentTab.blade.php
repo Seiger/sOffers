@@ -79,6 +79,23 @@
                     </select>
                 </div>
             </div>
+
+            @foreach($constructor as $item)
+                <div class="row form-row">
+                    <div class="col-auto col-title">
+                        <label for="{{$item['key']}}" class="warning">{{$item['name']}}</label>
+                    </div>
+                    <div class="col">
+                        <div class="input-group">
+                            @if($item['type'] == 'Text')
+                                <input type="text" id="{{$item['key']}}" class="form-control" name="constructor[{{$item['key']}}]" value="{{$item['value']}}" onchange="documentDirty=true;">
+                            @else
+                                <textarea id="{{$item['key']}}" class="form-control" name="constructor[{{$item['key']}}]" rows="3" wrap="soft" onchange="documentDirty=true;">{{$item['value']}}</textarea>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
 </form>

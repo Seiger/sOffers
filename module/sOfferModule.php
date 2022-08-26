@@ -54,10 +54,23 @@ switch ($data['get']) {
         return header('Location: ' . $sOfferController->url . $back);
     case "content":
         $data['tabs'] = ['offers', 'offer', 'content'];
-        $data['content'] = sOfferTranslate::whereOffer((int)request()->i)->whereLang(request()->lang)->first();
+        $content = sOfferTranslate::whereOffer((int)request()->i)->whereLang(request()->lang)->first();
         $data['offer_url'] = '&i=' . request()->i;
         $data['content_url'] = '&i=' . request()->i;
-        $data['editor'] = $sOfferController->textEditor("introtext,content");
+        $data['constructor'] = [];
+        $constructor = data_is_json($content->constructor, true);
+        $settings = require MODX_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php';
+        $editor = "introtext,content";
+        if (is_array($settings)) {
+            foreach ($settings as $setting) {
+                $data['constructor'][] = array_merge($setting, ['value' => ($constructor[$setting['key']] ?? '')]);
+                if ($setting['type'] == 'RichText') {
+                    $editor .= ",".$setting['key'];
+                }
+            }
+        }
+        $data['editor'] = $sOfferController->textEditor($editor);
+        $data['content'] = $content;
         break;
     case "contentSave":
         $content = sOfferTranslate::whereOffer((int)request()->offer)->whereLang(request()->lang)->firstOrNew();
@@ -72,6 +85,7 @@ switch ($data['get']) {
         $content->seotitle = request()->seotitle;
         $content->seodescription = request()->seodescription;
         $content->seorobots = request()->seorobots;
+        $content->constructor = json_encode(request()->constructor);
         $content->save();
         $back = str_replace('&i=0', '&i=' . $content->offer, (request()->back ?? '&get=offers'));
         return header('Location: ' . $sOfferController->url . $back);
@@ -173,6 +187,7 @@ switch ($data['get']) {
         }
         fwrite($f, "];");
         fclose($f);
+        sleep(10);
         $back = request()->back ?? '&get=settings';
         return header('Location: ' . $sOfferController->url . $back);
 }
