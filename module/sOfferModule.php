@@ -55,10 +55,13 @@ switch ($data['get']) {
     case "content":
         $data['tabs'] = ['offers', 'offer', 'content'];
         $content = sOfferTranslate::whereOffer((int)request()->i)->whereLang(request()->lang)->first();
+        if (!$content && request()->lang == $sOfferController->langDefault()) {
+            $content = sOfferTranslate::whereOffer((int)request()->i)->whereLang('base')->first();
+        }
         $data['offer_url'] = '&i=' . request()->i;
         $data['content_url'] = '&i=' . request()->i;
         $data['constructor'] = [];
-        $constructor = data_is_json($content->constructor, true);
+        $constructor = data_is_json($content->constructor ?? '', true);
         $settings = require MODX_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php';
         $editor = "introtext,content";
         if (is_array($settings)) {

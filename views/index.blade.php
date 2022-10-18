@@ -20,7 +20,7 @@
                                 </a>
                             </h2>
                             <script>tpResources.addTabPage(document.getElementById('content{{$lang}}Tab'));</script>
-                            @if($get == $tab)
+                            @if($get == $tab && $lang == request()->lang)
                                 @include('sOffers::'.$tab.'Tab')
                                 @php($get = 'content' . $lang)
                             @endif

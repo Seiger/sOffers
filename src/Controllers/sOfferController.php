@@ -107,19 +107,9 @@ class sOfferController
         }
         $elements = [];
         $ids = explode(",", $ids);
-        $s_lang = evo()->getConfig('s_lang_config', '');
 
-        if (trim($s_lang)) {
-            $s_lang = explode(',', $s_lang);
-            foreach ($s_lang as $lang) {
-                foreach ($ids as $id) {
-                    $elements[] = trim($lang) . "_" . trim($id);
-                }
-            }
-        } else {
-            foreach ($ids as $id) {
-                $elements[] = trim($id);
-            }
+        foreach ($ids as $id) {
+            $elements[] = trim($id);
         }
 
         return implode("", evo()->invokeEvent('OnRichTextEditorInit', [

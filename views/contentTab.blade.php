@@ -1,5 +1,5 @@
 <form id="form" name="form" method="post" enctype="multipart/form-data" action="{!!$url!!}&get=contentSave" onsubmit="documentDirty=false;">
-    <input type="hidden" name="back" value="&get=content&lang=base&i={{request()->i ?? 0}}" />
+    <input type="hidden" name="back" value="&get=content&lang={{request()->lang ?? 'base'}}&i={{request()->i ?? 0}}" />
     <input type="hidden" name="offer" value="{{request()->i ?? 0}}" />
     <input type="hidden" name="lang" value="{{request()->lang ?? 'base'}}" />
 

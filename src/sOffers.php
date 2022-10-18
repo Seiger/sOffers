@@ -25,8 +25,8 @@ class sOffers
      */
     public function all($paginate = 30): object
     {
-        $order = 's_offers.updated_at';
-        $direc = 'desc';
+        $order = 's_offers.position';
+        $direc = 'asc';
 
         $query = sOffer::orderBy($order, $direc);
 
