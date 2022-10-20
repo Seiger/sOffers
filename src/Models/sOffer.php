@@ -1,5 +1,6 @@
 <?php namespace Seiger\sOffers\Models;
 
+use EvolutionCMS\Facades\UrlProcessor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -75,5 +76,22 @@ class sOffer extends Model
         }
 
         return $coverSrc;
+    }
+
+    /**
+     * Get the offer link
+     *
+     * @return string link
+     */
+    public function getLinkAttribute()
+    {
+        if ($this->category == 0) {
+            $this->category = evo()->getConfig('site_start', 1);
+        }
+        $base_url = UrlProcessor::makeUrl($this->category);
+        if (str_starts_with($base_url, '/')) {
+            $base_url = MODX_SITE_URL . ltrim($base_url, '/');
+        }
+        return $base_url.$this->alias.evo()->getConfig('friendly_url_suffix', '');
     }
 }

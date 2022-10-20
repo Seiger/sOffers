@@ -17,6 +17,7 @@ class CreateSOffersTable extends Migration
         Schema::create('s_offers', function (Blueprint $table) {
             $table->id();
             $table->tinyInteger('published')->default(0)->index();
+            $table->integer('category')->default(0)->index();
             $table->integer('views')->default(0)->index();
             $table->integer('position')->default(0);
             $table->tinyInteger('rating')->default(0);

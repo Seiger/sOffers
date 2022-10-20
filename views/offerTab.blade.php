@@ -69,7 +69,35 @@
 
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
-                <div class="col-auto col-title-7">
+                <div class="col-auto col-title-6">
+                    <label for="parent" class="warning">@lang('global.resource_parent')</label>
+                    <i class="fa fa-question-circle" data-tooltip="@lang('global.resource_parent_help')"></i>
+                </div>
+                <div class="col">
+                    <div>
+                        @php($parentlookup = false)
+                        @if(($offer->category ?? 0) == 0)
+                            @php($parentname = evo()->getConfig('site_name'))
+                        @else
+                            @php($parentlookup = ($offer->category ?? 0))
+                        @endif
+                        @if($parentlookup !== false && is_numeric($parentlookup))
+                            @php($parentname = \EvolutionCMS\Models\SiteContent::withTrashed()->select('pagetitle')->find($parentlookup)->pagetitle)
+                            @if(!$parentname)
+                                @php(evo()->webAlertAndQuit($_lang["error_no_parent"]))
+                            @endif
+                        @endif
+                        <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
+                        <b id="parentName">{{($offer->category ?? 0)}} ({{entities($parentname)}})</b>
+                        <input type="hidden" name="category" value="{{($offer->category ?? 0)}}" onchange="documentDirty=true;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-col col-lg-3 col-md-3 col-12">
+            <div class="row form-row">
+                <div class="col-auto col-title-6">
                     <label for="price" class="warning">@lang('sOffers::global.price')</label>
                     <i class="fa fa-question-circle" data-tooltip="@lang('sOffers::global.price_help')"></i>
                 </div>
@@ -82,7 +110,7 @@
             </div>
         </div>
 
-        <div class="row-col col-lg-3 col-md-3 col-12">
+        <div class="row-col col-lg-6 col-md-6 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title">
                     <label for="features" class="warning">@lang('sOffers::global.features')</label>
@@ -159,4 +187,29 @@
             </a>
         </div>
     </div>
+    <script>
+        var allowParentSelection = false;
+
+        function enableParentSelection(b) {
+            var plock = document.getElementById('plock');
+            if(b) {
+                parent.tree.ca = "parent";
+                plock.className = "fa fa-folder-open";
+                allowParentSelection = true;
+            } else {
+                parent.tree.ca = "open";
+                plock.className = "fa fa-folder";
+                allowParentSelection = false;
+            }
+        }
+
+        function setParent(pId, pName) {
+            documentDirty = true;
+            document.form.category.value = pId;
+            var elm = document.getElementById('parentName');
+            if (elm) {
+                elm.innerHTML = (pId + " (" + pName + ")");
+            }
+        }
+    </script>
 @endpush

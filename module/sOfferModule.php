@@ -36,6 +36,7 @@ switch ($data['get']) {
     case "offerSave":
         $offer = sOffer::where('s_offers.id', (int)request()->offer)->firstOrNew();
         $offer->published = (int)request()->published;
+        $offer->category = (int)request()->category;
         $offer->price = $sOfferController->validatePrice(request()->price);
         $offer->position = (int)request()->position;
         $offer->rating = (int)request()->rating;
