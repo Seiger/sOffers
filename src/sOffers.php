@@ -40,19 +40,25 @@ class sOffers
     }
 
     /**
-     * Get offer object with translation
+     * Get offer object with translation by ID
      *
      * @param int $offerId
-     * @param string $lang
      * @return object
      */
-    public function getOffer(int $offerId, string $lang = ''): object
+    public function getOffer(int $offerId): object
     {
-        if (!trim($lang)) {
-            //$lang = $this->langDefault();
-        }
-
         return sOffer::where('s_offers.id', $offerId)->first() ?? new sOffer();
+    }
+
+    /**
+     * Get offer object with translation by Alias
+     *
+     * @param string $offerAlias
+     * @return object
+     */
+    public function getOfferByAlias(string $offerAlias): object
+    {
+        return sOffer::where('s_offers.alias', $offerAlias)->first() ?? new sOffer();
     }
 
     /**
