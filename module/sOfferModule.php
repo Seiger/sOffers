@@ -46,11 +46,17 @@ switch ($data['get']) {
         $offer->published_at = request()->published_at;
         $offer->save();
         $offer->features()->sync(request()->features ?? []);
+
+        $sOfferController->setOfferListing();
+
         $back = str_replace('&i=0', '&i=' . $offer->id, (request()->back ?? '&get=offers'));
         return header('Location: ' . $sOfferController->url . $back);
     case "offerDelete":
         $offer = DB::table('s_offers')->whereId((int)request()->i)->delete();
         DB::table('s_offer_translates')->whereOffer((int)request()->i)->delete();
+
+        $sOfferController->setOfferListing();
+
         $back = '&get=offers';
         return header('Location: ' . $sOfferController->url . $back);
     case "content":
@@ -162,6 +168,14 @@ switch ($data['get']) {
         }
         break;
     case "settingsSave":
+        if (request()->has('category') && request()->category != evo()->getConfig('s_offers_resource')) {
+            $resource = request()->category;
+            $tbl = evo()->getDatabase()->getFullTableName('system_settings');
+            evo()->getDatabase()->query("REPLACE INTO {$tbl} (`setting_name`, `setting_value`) VALUES ('s_offers_resource', '{$resource}')");
+            evo()->setConfig('s_offers_resource', $resource);
+            evo()->clearCache('full');
+        }
+
         $keys = request()->input('settings.key', []);
         $settings = [];
         if (count($keys)) {
@@ -192,6 +206,7 @@ switch ($data['get']) {
         fwrite($f, "];");
         fclose($f);
         sleep(10);
+
         $back = request()->back ?? '&get=settings';
         return header('Location: ' . $sOfferController->url . $back);
 }

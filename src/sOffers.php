@@ -1,6 +1,7 @@
 <?php namespace Seiger\sOffers;
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Seiger\sOffers\Controllers\sOfferController;
@@ -52,6 +53,24 @@ class sOffers
         }
 
         return sOffer::where('s_offers.id', $offerId)->first() ?? new sOffer();
+    }
+
+    /**
+     * List offer aliases
+     *
+     * @return array
+     */
+    public function documentListing(): array
+    {
+        $offerListing = Cache::get('offerListing');
+
+        if (!$offerListing) {
+            $sOfferController = new sOfferController();
+            $sOfferController->setOfferListing();
+            $offerListing = Cache::get('offerListing');
+        }
+
+        return $offerListing ?? [];
     }
 
     /**

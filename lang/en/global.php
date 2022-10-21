@@ -48,4 +48,6 @@
     'status' => 'Status',
     'with_id' => 'with ID',
     'you_sure' => 'Are you sure you want to delete the entry',
+    'resource' => 'Resource',
+    'resource_help' => 'Select a resource with an assigned template to display offer details to site users.',
 ];

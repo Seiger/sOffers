@@ -14,7 +14,7 @@ class sOffer extends Model
      *
      * @var array
      */
-    protected $appends = ['coverSrc'];
+    protected $appends = ['coverSrc', 'link'];
 
     /**
      * The "booted" method of the model.

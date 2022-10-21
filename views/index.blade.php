@@ -241,5 +241,29 @@
             }
             documentDirty = true;
         }
+
+        var allowParentSelection = false;
+
+        function enableParentSelection(b) {
+            var plock = document.getElementById('plock');
+            if(b) {
+                parent.tree.ca = "parent";
+                plock.className = "fa fa-folder-open";
+                allowParentSelection = true;
+            } else {
+                parent.tree.ca = "open";
+                plock.className = "fa fa-folder";
+                allowParentSelection = false;
+            }
+        }
+
+        function setParent(pId, pName) {
+            documentDirty = true;
+            document.form.category.value = pId;
+            var elm = document.getElementById('parentName');
+            if (elm) {
+                elm.innerHTML = (pId + " (" + pName + ")");
+            }
+        }
     </script>
 @endpush

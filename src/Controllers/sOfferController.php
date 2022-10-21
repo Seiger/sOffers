@@ -1,6 +1,8 @@
 <?php namespace Seiger\sOffers\Controllers;
 
+use EvolutionCMS\Facades\UrlProcessor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -90,6 +92,30 @@ class sOfferController
                 evo()->getDatabase()->query($query);
             }
         }
+    }
+
+    /**
+     * Generate offer list aliases
+     *
+     * @return void
+     */
+    public function setOfferListing(): void
+    {
+        $offerListing = [];
+        $offers = sOffer::select('id', 'alias', 'category')->wherePublished(1)->get();
+
+        if ($offers) {
+            foreach ($offers as $offer) {
+                $parent = '';
+                if ((int)$offer->category > 0) {
+                    $parent = UrlProcessor::makeUrl($offer->category);
+                    $parent = ltrim($parent, '/');
+                }
+                $offerListing[$parent.$offer->alias] = $offer->id;
+            }
+        }
+
+        Cache::forever('offerListing', $offerListing);
     }
 
     /**

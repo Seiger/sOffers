@@ -42,6 +42,36 @@
             </div>
         @endforeach
     </div>
+
+    <div class="row form-row">
+        <div class="row-col col-lg-3 col-md-3 col-12">
+            <div class="row form-row">
+                <div class="col-auto col-title-6">
+                    <label for="parent" class="warning">@lang('sOffers::global.resource')</label>
+                    <i class="fa fa-question-circle" data-tooltip="@lang('sOffers::global.resource_help')"></i>
+                </div>
+                <div class="col">
+                    <div>
+                        @php($parentlookup = false)
+                        @if(evo()->getConfig('s_offers_resource', 1) == 0)
+                            @php($parentname = evo()->getConfig('site_name'))
+                        @else
+                            @php($parentlookup = evo()->getConfig('s_offers_resource', 1))
+                        @endif
+                        @if($parentlookup !== false && is_numeric($parentlookup))
+                            @php($parentname = \EvolutionCMS\Models\SiteContent::withTrashed()->select('pagetitle')->find($parentlookup)->pagetitle)
+                            @if(!$parentname)
+                                @php(evo()->webAlertAndQuit($_lang["error_no_parent"]))
+                            @endif
+                        @endif
+                        <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
+                        <b id="parentName">{{evo()->getConfig('s_offers_resource', 1)}} ({{entities($parentname)}})</b>
+                        <input type="hidden" name="category" value="{{evo()->getConfig('s_offers_resource', 1)}}" onchange="documentDirty=true;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </form>
 
 @push('scripts.bot')
