@@ -20,7 +20,7 @@ Event::listen('evolution.OnPageNotFound', function($params) {
 
     if (!$goTo && evo()->getLoginUserID('mgr')) {
         $alias = Arr::last($aliasArr);
-        $offer = sOffers::getOfferByAlias($alias);
+        $offer = sOffers::getOfferByAlias($alias ?? '');
 
         if ($offer && isset($offer->offer) && (int)$offer->offer > 0) {
             $goTo = true;
@@ -46,7 +46,7 @@ Event::listen('evolution.OnAfterLoadDocumentObject', function($params) {
 
     if (!$document && evo()->getLoginUserID('mgr')) {
         $alias = Arr::last($aliasArr);
-        $offer = sOffers::getOfferByAlias($alias);
+        $offer = sOffers::getOfferByAlias($alias ?? '');
 
         if ($offer && isset($offer->offer) && (int)$offer->offer > 0) {
             evo()->documentObject = array_merge($params['documentObject'], $offer->toArray());
