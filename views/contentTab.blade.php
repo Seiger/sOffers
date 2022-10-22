@@ -80,6 +80,8 @@
                 </div>
             </div>
 
+            <div class="split my-2"></div>
+
             @foreach($constructor as $item)
                 <div class="row form-row">
                     <div class="col-auto col-title">
@@ -96,6 +98,8 @@
                     </div>
                 </div>
             @endforeach
+
+            <div class="split my-2"></div>
         </div>
     </div>
 </form>

@@ -43,6 +43,8 @@
         @endforeach
     </div>
 
+    <div class="split my-2"></div>
+
     <div class="row form-row">
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
@@ -66,12 +68,14 @@
                         @endif
                         <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
                         <b id="parentName">{{evo()->getConfig('s_offers_resource', 1)}} ({{entities($parentname)}})</b>
-                        <input type="hidden" name="category" value="{{evo()->getConfig('s_offers_resource', 1)}}" onchange="documentDirty=true;" />
+                        <input type="hidden" name="parent" value="{{evo()->getConfig('s_offers_resource', 1)}}" onchange="documentDirty=true;" />
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="split my-2"></div>
 </form>
 
 @push('scripts.bot')

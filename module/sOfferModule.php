@@ -36,12 +36,13 @@ switch ($data['get']) {
     case "offerSave":
         $offer = sOffer::where('s_offers.id', (int)request()->offer)->firstOrNew();
         $offer->published = (int)request()->published;
-        $offer->category = (int)request()->category;
+        $offer->parent = (int)request()->parent;
         $offer->price = $sOfferController->validatePrice(request()->price);
         $offer->position = (int)request()->position;
         $offer->rating = (int)request()->rating;
         $offer->alias = $sOfferController->validateAlias(request()->alias, request()->offer);
         $offer->prg_link = request()->prg_link;
+        $offer->website = request()->website;
         $offer->cover = request()->cover;
         $offer->published_at = request()->published_at;
         $offer->save();
@@ -168,8 +169,8 @@ switch ($data['get']) {
         }
         break;
     case "settingsSave":
-        if (request()->has('category') && request()->category != evo()->getConfig('s_offers_resource')) {
-            $resource = request()->category;
+        if (request()->has('parent') && request()->parent != evo()->getConfig('s_offers_resource')) {
+            $resource = request()->parent;
             $tbl = evo()->getDatabase()->getFullTableName('system_settings');
             evo()->getDatabase()->query("REPLACE INTO {$tbl} (`setting_name`, `setting_value`) VALUES ('s_offers_resource', '{$resource}')");
             evo()->setConfig('s_offers_resource', $resource);

@@ -102,13 +102,13 @@ class sOfferController
     public function setOfferListing(): void
     {
         $offerListing = [];
-        $offers = sOffer::select('id', 'alias', 'category')->wherePublished(1)->get();
+        $offers = sOffer::select('id', 'alias', 'parent')->wherePublished(1)->get();
 
         if ($offers) {
             foreach ($offers as $offer) {
                 $parent = '';
-                if ((int)$offer->category > 0) {
-                    $parent = UrlProcessor::makeUrl($offer->category);
+                if ((int)$offer->parent > 0) {
+                    $parent = UrlProcessor::makeUrl($offer->parent);
                     $parent = ltrim($parent, '/');
                 }
                 $offerListing[$parent.$offer->alias] = $offer->id;

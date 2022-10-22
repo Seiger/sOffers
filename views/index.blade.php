@@ -259,7 +259,7 @@
 
         function setParent(pId, pName) {
             documentDirty = true;
-            document.form.category.value = pId;
+            document.form.parent.value = pId;
             var elm = document.getElementById('parentName');
             if (elm) {
                 elm.innerHTML = (pId + " (" + pName + ")");

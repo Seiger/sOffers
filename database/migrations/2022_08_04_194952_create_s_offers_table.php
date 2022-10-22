@@ -17,13 +17,14 @@ class CreateSOffersTable extends Migration
         Schema::create('s_offers', function (Blueprint $table) {
             $table->id();
             $table->tinyInteger('published')->default(0)->index();
-            $table->integer('category')->default(0)->index();
+            $table->integer('parent')->default(0)->index();
             $table->integer('views')->default(0)->index();
             $table->integer('position')->default(0);
             $table->tinyInteger('rating')->default(0);
             $table->float('price', 9, 2);
             $table->string('alias', 255)->index();
             $table->string('prg_link', 255)->default('');
+            $table->string('website', 255)->default('');
             $table->string('cover', 255)->default('');
             $table->jsonb('rating_stats')->default(new Expression('(JSON_ARRAY())'));
             $table->timestamp('published_at')->nullable();

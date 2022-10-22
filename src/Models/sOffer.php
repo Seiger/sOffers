@@ -85,10 +85,10 @@ class sOffer extends Model
      */
     public function getLinkAttribute()
     {
-        if ($this->category == 0) {
-            $this->category = evo()->getConfig('site_start', 1);
+        if ($this->parent == 0) {
+            $this->parent = evo()->getConfig('site_start', 1);
         }
-        $base_url = UrlProcessor::makeUrl($this->category);
+        $base_url = UrlProcessor::makeUrl($this->parent);
         if (str_starts_with($base_url, '/')) {
             $base_url = MODX_SITE_URL . ltrim($base_url, '/');
         }

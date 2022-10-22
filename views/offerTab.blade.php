@@ -19,6 +19,22 @@
         </div>
 
         <div class="row-col col-lg-3 col-md-3 col-12">
+            <div class="row form-row">
+                <div class="col-auto col-title-7">
+                    <label for="position" class="warning">@lang('sOffers::global.position')</label>
+                    <i class="fa fa-question-circle" data-tooltip="@lang('sOffers::global.position_help')"></i>
+                </div>
+                <div class="input-group col">
+                    <div class="input-group-prepend">
+                        <span class="btn btn-secondary" onclick="var elm = document.form.position;var v=parseInt(elm.value+'')-1;elm.value=v>0? v:0;elm.focus();documentDirty=true;return false;" style="cursor: pointer;"><i class="fa fa-angle-left"></i></span>
+                        <span class="btn btn-secondary" onclick="var elm = document.form.position;var v=parseInt(elm.value+'')+1;elm.value=v>0? v:0;elm.focus();documentDirty=true;return false;" style="cursor: pointer;"><i class="fa fa-angle-right"></i></span>
+                    </div>
+                    <input type="text" id="position" name="position" class="form-control" value="{{$offer->position ?? 0}}" onchange="documentDirty=true;">
+                </div>
+            </div>
+        </div>
+
+        <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row form-row-date">
                 <div class="col-auto col-title-9">
                     <label for="published_at" class="warning">@lang('global.publish_date')</label>
@@ -37,16 +53,28 @@
 
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
-                <div class="col-auto col-title-7">
-                    <label for="position" class="warning">@lang('sOffers::global.position')</label>
-                    <i class="fa fa-question-circle" data-tooltip="@lang('sOffers::global.position_help')"></i>
+                <div class="col-auto col-title-6">
+                    <label for="parent" class="warning">@lang('global.resource_parent')</label>
+                    <i class="fa fa-question-circle" data-tooltip="@lang('global.resource_parent_help')"></i>
                 </div>
-                <div class="input-group col">
-                    <div class="input-group-prepend">
-                        <span class="btn btn-secondary" onclick="var elm = document.form.position;var v=parseInt(elm.value+'')-1;elm.value=v>0? v:0;elm.focus();documentDirty=true;return false;" style="cursor: pointer;"><i class="fa fa-angle-left"></i></span>
-                        <span class="btn btn-secondary" onclick="var elm = document.form.position;var v=parseInt(elm.value+'')+1;elm.value=v>0? v:0;elm.focus();documentDirty=true;return false;" style="cursor: pointer;"><i class="fa fa-angle-right"></i></span>
+                <div class="col">
+                    <div>
+                        @php($parentlookup = false)
+                        @if(($offer->parent ?? 0) == 0)
+                            @php($parentname = evo()->getConfig('site_name'))
+                        @else
+                            @php($parentlookup = ($offer->parent ?? 0))
+                                @endif
+                                @if($parentlookup !== false && is_numeric($parentlookup))
+                                    @php($parentname = \EvolutionCMS\Models\SiteContent::withTrashed()->select('pagetitle')->find($parentlookup)->pagetitle)
+                                    @if(!$parentname)
+                                        @php(evo()->webAlertAndQuit($_lang["error_no_parent"]))
+                                    @endif
+                                @endif
+                                <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
+                                <b id="parentName">{{($offer->parent ?? 0)}} ({{entities($parentname)}})</b>
+                                <input type="hidden" name="parent" value="{{($offer->parent ?? 0)}}" onchange="documentDirty=true;" />
                     </div>
-                    <input type="text" id="position" name="position" class="form-control" value="{{$offer->position ?? 0}}" onchange="documentDirty=true;">
                 </div>
             </div>
         </div>
@@ -63,34 +91,6 @@
                             <option value="{{$value}}" @if($offer->rating == $value) selected @endif>{{$value}}</option>
                         @endforeach
                     </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="row-col col-lg-3 col-md-3 col-12">
-            <div class="row form-row">
-                <div class="col-auto col-title-6">
-                    <label for="parent" class="warning">@lang('global.resource_parent')</label>
-                    <i class="fa fa-question-circle" data-tooltip="@lang('global.resource_parent_help')"></i>
-                </div>
-                <div class="col">
-                    <div>
-                        @php($parentlookup = false)
-                        @if(($offer->category ?? 0) == 0)
-                            @php($parentname = evo()->getConfig('site_name'))
-                        @else
-                            @php($parentlookup = ($offer->category ?? 0))
-                        @endif
-                        @if($parentlookup !== false && is_numeric($parentlookup))
-                            @php($parentname = \EvolutionCMS\Models\SiteContent::withTrashed()->select('pagetitle')->find($parentlookup)->pagetitle)
-                            @if(!$parentname)
-                                @php(evo()->webAlertAndQuit($_lang["error_no_parent"]))
-                            @endif
-                        @endif
-                        <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
-                        <b id="parentName">{{($offer->category ?? 0)}} ({{entities($parentname)}})</b>
-                        <input type="hidden" name="category" value="{{($offer->category ?? 0)}}" onchange="documentDirty=true;" />
-                    </div>
                 </div>
             </div>
         </div>
@@ -165,6 +165,18 @@
                         <div id="image_for_cover" class="image_for_field" data-image="{{$offer->coverSrc ?? ''}}" onclick="BrowseServer('cover')" style="background-image: url('{{$offer->coverSrc ?? ''}}');"></div>
                         <script>document.getElementById('cover').addEventListener('change', evoRenderImageCheck, false);</script>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-col col-lg-6 col-md-6 col-12">
+            <div class="row form-row">
+                <div class="col-auto col-title-7">
+                    <label for="prg_link" class="warning">@lang('sOffers::global.website')</label>
+                    <i class="fa fa-question-circle" data-tooltip="@lang('sOffers::global.website_help')"></i>
+                </div>
+                <div class="col">
+                    <input type="text" id="website" class="form-control" name="website" maxlength="255" value="{{$offer->website ?? ''}}" onchange="documentDirty=true;">
                 </div>
             </div>
         </div>

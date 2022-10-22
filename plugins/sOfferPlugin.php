@@ -3,6 +3,7 @@
  * Plugin for Seiger Offers Management Module for Evolution CMS admin panel.
  */
 
+use Illuminate\Support\Arr;
 use Seiger\sOffers\Models\sOffer;
 
 /**
@@ -38,7 +39,7 @@ Event::listen('evolution.OnPageNotFound', function($params) {
  */
 Event::listen('evolution.OnAfterLoadDocumentObject', function($params) {
     $aliasArr = request()->segments();
-    if ($aliasArr[0] == evo()->getConfig('lang', 'uk')) {
+    if (isset($aliasArr[0]) && $aliasArr[0] == evo()->getConfig('lang', 'uk')) {
         unset($aliasArr[0]);
     }
     $alias = implode('/', $aliasArr);
@@ -49,12 +50,14 @@ Event::listen('evolution.OnAfterLoadDocumentObject', function($params) {
         $offer = sOffers::getOfferByAlias($alias ?? '');
 
         if ($offer && isset($offer->offer) && (int)$offer->offer > 0) {
-            evo()->documentObject = array_merge($params['documentObject'], $offer->toArray());
+            $offer->constructor = data_is_json($offer->constructor, true) ?? [];
+            evo()->documentObject = array_merge($params['documentObject'], Arr::dot($offer->toArray()));
         }
     }
 
     if ($document) {
-        $offer = sOffer::find($document)->toArray();
-        evo()->documentObject = array_merge($params['documentObject'], $offer);
+        $offer = sOffer::find($document);
+        $offer->constructor = data_is_json($offer->constructor, true) ?? [];
+        evo()->documentObject = array_merge($params['documentObject'], Arr::dot($offer->toArray()));
     }
 });
