@@ -27,6 +27,7 @@ class CreateSOffersTable extends Migration
             $table->string('website', 255)->default('');
             $table->string('cover', 255)->default('');
             $table->jsonb('rating_stats')->default(new Expression('(JSON_ARRAY())'));
+            $table->jsonb('tmplvars')->default(new Expression('(JSON_ARRAY())'));
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
         });

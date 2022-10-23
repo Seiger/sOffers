@@ -1,9 +1,9 @@
 <h3>{{(request()->i ?? 0) == 0 ? __('sOffers::global.add_help') : ($offer->pagetitle ?? __('sOffers::global.no_text'))}}</h3>
 <div class="split my-3"></div>
+
 <form id="form" name="form" method="post" enctype="multipart/form-data" action="{!!$url!!}&get=offerSave" onsubmit="documentDirty=false;">
     <input type="hidden" name="back" value="&get=offer&i={{request()->i ?? 0}}" />
     <input type="hidden" name="offer" value="{{request()->i ?? 0}}" />
-
     <div class="row form-row">
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row form-row-checkbox">
@@ -17,7 +17,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-7">
@@ -33,7 +32,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row form-row-date">
                 <div class="col-auto col-title-9">
@@ -50,7 +48,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-6">
@@ -64,21 +61,20 @@
                             @php($parentname = evo()->getConfig('site_name'))
                         @else
                             @php($parentlookup = ($offer->parent ?? 0))
-                                @endif
-                                @if($parentlookup !== false && is_numeric($parentlookup))
-                                    @php($parentname = \EvolutionCMS\Models\SiteContent::withTrashed()->select('pagetitle')->find($parentlookup)->pagetitle)
-                                    @if(!$parentname)
-                                        @php(evo()->webAlertAndQuit($_lang["error_no_parent"]))
-                                    @endif
-                                @endif
-                                <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
-                                <b id="parentName">{{($offer->parent ?? 0)}} ({{entities($parentname)}})</b>
-                                <input type="hidden" name="parent" value="{{($offer->parent ?? 0)}}" onchange="documentDirty=true;" />
+                        @endif
+                        @if($parentlookup !== false && is_numeric($parentlookup))
+                            @php($parentname = \EvolutionCMS\Models\SiteContent::withTrashed()->select('pagetitle')->find($parentlookup)->pagetitle)
+                            @if(!$parentname)
+                                @php(evo()->webAlertAndQuit($_lang["error_no_parent"]))
+                            @endif
+                        @endif
+                        <i id="plock" class="fa fa-folder" onclick="enableParentSelection(!allowParentSelection);"></i>
+                        <b id="parentName">{{($offer->parent ?? 0)}} ({{entities($parentname)}})</b>
+                        <input type="hidden" name="parent" value="{{($offer->parent ?? 0)}}" onchange="documentDirty=true;" />
                     </div>
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-7">
@@ -94,7 +90,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-3 col-md-3 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-6">
@@ -109,7 +104,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-6 col-md-6 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title">
@@ -126,7 +120,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-6 col-md-6 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-7">
@@ -139,7 +132,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-6 col-md-6 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-7">
@@ -151,7 +143,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-6 col-md-6 col-12">
             <div class="row form-row form-row-image">
                 <div class="col-auto col-title-7">
@@ -168,7 +159,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row-col col-lg-6 col-md-6 col-12">
             <div class="row form-row">
                 <div class="col-auto col-title-7">

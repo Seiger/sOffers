@@ -3,6 +3,9 @@
  * Offers management module
  */
 
+use EvolutionCMS\Models\SiteContent;
+use EvolutionCMS\Models\SiteTmplvar;
+use EvolutionCMS\Models\SiteTmplvarTemplate;
 use Illuminate\Support\Str;
 use Seiger\sOffers\Controllers\sOfferController;
 use Seiger\sOffers\Models\sOFeature;
@@ -31,7 +34,13 @@ switch ($data['get']) {
         $data['offer'] = sOffers::getOffer(request()->i);
         $data['offer_url'] = '&i='.request()->i;
         $data['content_url'] = '&i='.request()->i;
+        $data['tvs_url'] = '&i='.request()->i;
         $data['features'] = sOFeature::orderBy('base')->get();
+
+        $template = SiteContent::find(evo()->getConfig('s_offers_resource', 0))->template ?? null;
+        if ($template && SiteTmplvarTemplate::whereTemplateid($template)->first()) {
+            $data['tabs'][] = 'tvs';
+        }
         break;
     case "offerSave":
         $offer = sOffer::where('s_offers.id', (int)request()->offer)->firstOrNew();
@@ -62,12 +71,19 @@ switch ($data['get']) {
         return header('Location: ' . $sOfferController->url . $back);
     case "content":
         $data['tabs'] = ['offers', 'offer', 'content'];
+
+        $template = SiteContent::find(evo()->getConfig('s_offers_resource', 0))->template ?? null;
+        if ($template && SiteTmplvarTemplate::whereTemplateid($template)->first()) {
+            $data['tabs'][] = 'tvs';
+        }
+
         $content = sOfferTranslate::whereOffer((int)request()->i)->whereLang(request()->lang)->first();
         if (!$content && request()->lang == $sOfferController->langDefault()) {
             $content = sOfferTranslate::whereOffer((int)request()->i)->whereLang('base')->first();
         }
         $data['offer_url'] = '&i=' . request()->i;
         $data['content_url'] = '&i=' . request()->i;
+        $data['tvs_url'] = '&i='.request()->i;
         $data['constructor'] = [];
         $constructor = data_is_json($content->constructor ?? '', true);
         $settings = require MODX_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php';
@@ -99,6 +115,51 @@ switch ($data['get']) {
         $content->constructor = json_encode(request()->constructor);
         $content->save();
         $back = str_replace('&i=0', '&i=' . $content->offer, (request()->back ?? '&get=offers'));
+        return header('Location: ' . $sOfferController->url . $back);
+    case "tvs":
+        $data['tabs'] = ['offers', 'offer', 'content', 'tvs'];
+        $data['offer'] = sOffers::getOffer(request()->i);
+        $data['offer_url'] = '&i='.request()->i;
+        $data['content_url'] = '&i='.request()->i;
+        $template = SiteContent::find(evo()->getConfig('s_offers_resource', 0))->template ?? 0;
+        $data['tvs'] = SiteTmplvar::query()
+            ->select('site_tmplvars.*', 'site_tmplvar_templates.rank as tvrank', 'site_tmplvar_templates.rank', 'site_tmplvars.id', 'site_tmplvars.rank')
+            ->join('site_tmplvar_templates', 'site_tmplvar_templates.tmplvarid', '=', 'site_tmplvars.id')
+            ->orderBy('site_tmplvar_templates.rank', 'ASC')
+            ->orderBy('site_tmplvars.rank', 'ASC')
+            ->orderBy('site_tmplvars.id', 'ASC')
+            ->where('site_tmplvar_templates.templateid', $template)
+            ->get();
+        $data['tvValues'] = data_is_json($data['offer']->tmplvars, true) ?? [];
+        break;
+    case "tvsSave":
+        $offer = sOffers::getOffer((int)request()->offer);
+        $template = SiteContent::find(evo()->getConfig('s_offers_resource', 0))->template ?? 0;
+        $tvs = SiteTmplvar::query()
+            ->select('site_tmplvars.*', 'site_tmplvar_templates.rank as tvrank', 'site_tmplvar_templates.rank', 'site_tmplvars.id', 'site_tmplvars.rank')
+            ->join('site_tmplvar_templates', 'site_tmplvar_templates.tmplvarid', '=', 'site_tmplvars.id')
+            ->orderBy('site_tmplvar_templates.rank', 'ASC')
+            ->orderBy('site_tmplvars.rank', 'ASC')
+            ->orderBy('site_tmplvars.id', 'ASC')
+            ->where('site_tmplvar_templates.templateid', $template)
+            ->get();
+        $tvValues = [];
+
+        if ($tvs) {
+            foreach ($tvs as $tv) {
+                if (request()->has('tv'.$tv->id)) {
+                    $value = request()->input('tv'.$tv->id);
+                    if (is_array($value)) {
+                        $value = implode('||', $value);
+                    }
+                    $tvValues[$tv->name] = $value;
+                }
+            }
+        }
+
+        $offer->tmplvars = json_encode($tvValues);
+        $offer->save();
+        $back = str_replace('&i=0', '&i=' . $offer->id, (request()->back ?? '&get=tvs'));
         return header('Location: ' . $sOfferController->url . $back);
     case "features":
         $sOfferController->setModifyTables();

@@ -2,7 +2,6 @@
     <input type="hidden" name="back" value="&get=content&lang={{request()->lang ?? 'base'}}&i={{request()->i ?? 0}}" />
     <input type="hidden" name="offer" value="{{request()->i ?? 0}}" />
     <input type="hidden" name="lang" value="{{request()->lang ?? 'base'}}" />
-
     <div class="row form-row">
         <div class="row-col col-lg-12 col-12">
             <div class="row form-row">
@@ -14,7 +13,6 @@
                     <input type="text" id="pagetitle" class="form-control" name="pagetitle" maxlength="255" value="{{$content->pagetitle ?? ''}}" onchange="documentDirty=true;" spellcheck="true">
                 </div>
             </div>
-
             <div class="row form-row">
                 <div class="col-auto col-title">
                     <label for="longtitle" class="warning">@lang('global.long_title')</label>
@@ -23,7 +21,6 @@
                     <input type="text" id="longtitle" class="form-control" name="longtitle" maxlength="255" value="{{$content->longtitle ?? ''}}" onchange="documentDirty=true;" spellcheck="true">
                 </div>
             </div>
-
             <div class="row form-row">
                 <div class="col-auto col-title">
                     <label for="introtext" class="warning">@lang('global.resource_summary')</label>
@@ -32,7 +29,6 @@
                     <textarea id="introtext" class="form-control" name="introtext" rows="5" wrap="soft" onchange="documentDirty=true;">{{$content->introtext ?? ''}}</textarea>
                 </div>
             </div>
-
             <div class="row form-row form-row-richtext">
                 <div class="col-auto col-title">
                     <label for="content" class="warning">@lang('global.resource_content')</label>
@@ -41,7 +37,6 @@
                     <textarea id="content" class="form-control" name="content" cols="40" rows="15" onchange="documentDirty=true;">{{$content->content ?? ''}}</textarea>
                 </div>
             </div>
-
             <div class="row form-row">
                 <div class="col-auto col-title-9">
                     <label for="seotitle" class="warning">@lang('sOffers::global.seotitle')</label>
@@ -53,7 +48,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="row form-row">
                 <div class="col-auto col-title">
                     <label for="seodescription" class="warning">@lang('sOffers::global.seodescription')</label>
@@ -65,7 +59,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="row form-row">
                 <div class="col-auto col-title">
                     <label for="seorobots" class="warning">@lang('sOffers::global.seorobots')</label>
@@ -79,9 +72,7 @@
                     </select>
                 </div>
             </div>
-
             <div class="split my-2"></div>
-
             @foreach($constructor as $item)
                 <div class="row form-row">
                     <div class="col-auto col-title">
@@ -98,7 +89,6 @@
                     </div>
                 </div>
             @endforeach
-
             <div class="split my-2"></div>
         </div>
     </div>
@@ -119,7 +109,6 @@
             </a>
         </div>
     </div>
-
     <div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

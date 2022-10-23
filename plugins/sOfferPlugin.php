@@ -50,14 +50,25 @@ Event::listen('evolution.OnAfterLoadDocumentObject', function($params) {
         $offer = sOffers::getOfferByAlias($alias ?? '');
 
         if ($offer && isset($offer->offer) && (int)$offer->offer > 0) {
-            $offer->constructor = data_is_json($offer->constructor, true) ?? [];
-            evo()->documentObject = array_merge($params['documentObject'], Arr::dot($offer->toArray()));
+            $document = (int)$offer->offer;
         }
     }
 
     if ($document) {
         $offer = sOffer::find($document);
-        $offer->constructor = data_is_json($offer->constructor, true) ?? [];
+        $offer->constructor = data_is_json($offer->constructor, true);
+        $offer->tmplvars = data_is_json($offer->tmplvars, true);
+
+        if ($offer->tmplvars && count($offer->tmplvars)) {
+            foreach ($offer->tmplvars as $name => $value) {
+                if (isset($params['documentObject'][$name]) && is_array($params['documentObject'][$name])) {
+                    $params['documentObject'][$name][1] = $value;
+                }
+            }
+        }
+
+        unset($offer->tmplvars);
+
         evo()->documentObject = array_merge($params['documentObject'], Arr::dot($offer->toArray()));
     }
 });
