@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Seiger\sOffers\Controllers\sOfferController;
 
-Route::middleware('mgr')->prefix('sgallery/')->name('sGallery.')->group(function () {
+Route::middleware('mgr')->prefix('soffer/')->name('sOffer.')->group(function () {
     Route::get('', [sOfferController::class, 'index']);
     Route::post('upload-file', [sOfferController::class, 'uploadFile'])->name('upload-file');
     Route::post('upload-download', [sOfferController::class, 'uploadDownload'])->name('upload-download');
