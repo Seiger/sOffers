@@ -27,14 +27,21 @@ class sOffer extends Model
         $locale = evo()->getConfig('lang', $controller->langDefault());
 
         static::addGlobalScope('translates', function (Builder $builder) use ($locale) {
-            $builder->leftJoin('s_offer_translates', function ($leftJoin) use ($locale) {
+            $grammar = $builder->getQuery()->getGrammar();
+            $quotedLocale = DB::connection()->getPdo()->quote($locale);
+            $quotedBase = DB::connection()->getPdo()->quote('base');
+            $langOrderSql = 'CASE WHEN ' . $grammar->wrap('lang') . ' = ' . $quotedLocale
+                . ' THEN 0 WHEN ' . $grammar->wrap('lang') . ' = ' . $quotedBase
+                . ' THEN 1 ELSE 2 END';
+
+            $builder->leftJoin('s_offer_translates', function ($leftJoin) use ($locale, $langOrderSql) {
                 $leftJoin->on('s_offers.id', '=', 's_offer_translates.offer')
-                    ->where('lang', function ($leftJoin) use ($locale) {
+                    ->where('lang', function ($leftJoin) use ($locale, $langOrderSql) {
                         $leftJoin->select('lang')
-                            ->from('s_offer_translates')
-                            ->whereRaw(DB::getTablePrefix().'s_offer_translates.offer = '.DB::getTablePrefix().'s_offers.id')
+                            ->from('s_offer_translates as sot')
+                            ->whereColumn('sot.offer', 's_offers.id')
                             ->whereIn('lang', [$locale, 'base'])
-                            ->orderByRaw('FIELD(lang, "'.$locale.'", "base")')
+                            ->orderByRaw($langOrderSql)
                             ->limit(1);
                     });
             });
