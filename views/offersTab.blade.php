@@ -36,9 +36,11 @@
                         <a href="{{$url}}&get=offer&i={{$offer->id}}" class="btn btn-outline-success">
                             <i class="fa fa-pencil"></i> <span>@lang('global.edit')</span>
                         </a>
+                        @if(evo()->hasPermission('soffers_delete', 'mgr'))
                         <a href="#" data-href="{{$url}}&get=offerDelete&i={{$offer->id}}" data-delete="{{$offer->id}}" data-name="{{$offer->pagetitle}}" class="btn btn-outline-danger">
                             <i class="fa fa-trash"></i> <span>@lang('global.remove')</span>
                         </a>
+                        @endif
                     </div>
                 </td>
             </tr>
@@ -52,9 +54,11 @@
 @push('scripts.bot')
     <div id="actions">
         <div class="btn-group">
+            @if(evo()->hasPermission('soffers_create', 'mgr'))
             <a id="Button2" href="{!!$url!!}&get=offer&i=0" class="btn btn-primary" title="@lang('sOffers::global.add_help')">
                 <i class="fa fa-plus"></i> <span>@lang('global.add')</span>
             </a>
+            @endif
         </div>
     </div>
 

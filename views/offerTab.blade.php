@@ -2,6 +2,7 @@
 <div class="split my-3"></div>
 
 <form id="form" name="form" method="post" enctype="multipart/form-data" action="{!!$url!!}&get=offerSave" onsubmit="documentDirty=false;">
+    @csrf
     <input type="hidden" name="back" value="&get=offer&i={{request()->i ?? 0}}" />
     <input type="hidden" name="offer" value="{{request()->i ?? 0}}" />
     <div class="row form-row">
@@ -177,16 +178,20 @@
 @push('scripts.bot')
     <div id="actions">
         <div class="btn-group">
+            @if(evo()->hasPermission(($offer->exists ?? false) ? 'soffers_save' : 'soffers_create', 'mgr'))
             <a id="Button1" class="btn btn-success" href="javascript:void(0);" onclick="saveForm('#form');">
                 <i class="fa fa-floppy-o"></i>
                 <span>@lang('global.save')</span>
             </a>
+            @endif
             <a id="Button5" class="btn btn-secondary" href="{!!$url!!}">
                 <i class="fa fa-times-circle"></i><span>@lang('global.cancel')</span>
             </a>
+            @if(($offer->id ?? 0) && evo()->hasPermission('soffers_delete', 'mgr'))
             <a id="Button3" class="btn btn-danger" data-href="{{$url}}&get=offerDelete&i={{$offer->id}}" data-delete="{{$offer->id}}" data-name="{{$offer->pagetitle}}">
                 <i class="fa fa-trash"></i> <span>@lang('global.remove')</span>
             </a>
+            @endif
         </div>
     </div>
 @endpush

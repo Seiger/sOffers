@@ -54,4 +54,13 @@
     'website_help' => 'Сайт, що представляє компанію від якої дана пропозиція.',
     'tvs' => 'Параметри (TV)',
     'tvs_icon' => 'fab fa-modx',
+    'sync_language_fields' => 'Оновити мовні поля характеристик',
+    'permissions_group' => 'Пакети Seiger',
+    'permission_access' => 'Доступ до sOffers',
+    'permission_create' => 'Створення пропозицій sOffers',
+    'permission_save' => 'Редагування пропозицій, вмісту та TV у sOffers',
+    'permission_delete' => 'Видалення пропозицій і характеристик sOffers',
+    'permission_publish' => 'Зміна публікації та дати публікації sOffers',
+    'permission_features' => 'Керування характеристиками sOffers',
+    'permission_settings' => 'Налаштування sOffers та оновлення мовних полів',
 ];

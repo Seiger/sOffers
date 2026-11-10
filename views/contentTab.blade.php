@@ -1,4 +1,5 @@
 <form id="form" name="form" method="post" enctype="multipart/form-data" action="{!!$url!!}&get=contentSave" onsubmit="documentDirty=false;">
+    @csrf
     <input type="hidden" name="back" value="&get=content&lang={{request()->lang ?? 'base'}}&i={{request()->i ?? 0}}" />
     <input type="hidden" name="offer" value="{{request()->i ?? 0}}" />
     <input type="hidden" name="lang" value="{{request()->lang ?? 'base'}}" />
@@ -97,30 +98,20 @@
 @push('scripts.bot')
     <div id="actions">
         <div class="btn-group">
+            @if(evo()->hasPermission('soffers_save', 'mgr'))
             <a id="Button1" class="btn btn-success" href="javascript:void(0);" onclick="saveForm('#form');">
                 <i class="fa fa-floppy-o"></i>
                 <span>@lang('global.save')</span>
             </a>
+            @endif
             <a id="Button5" class="btn btn-secondary" href="{!!$url!!}">
                 <i class="fa fa-times-circle"></i><span>@lang('global.cancel')</span>
             </a>
-            <a id="Button3" class="btn btn-danger" data-href="{{$url}}&get=offerDelete&i={{request()->i ?? 0}}" data-toggle="modal" data-target="#confirmDelete" data-id="{{request()->i ?? 0}}" data-name="{{$content->pagetitle ?? ''}}">
+            @if(evo()->hasPermission('soffers_delete', 'mgr'))
+            <a id="Button3" class="btn btn-danger" data-href="{{$url}}&get=offerDelete&i={{request()->i ?? 0}}" data-delete="{{request()->i ?? 0}}" data-name="{{$content->pagetitle ?? ''}}">
                 <i class="fa fa-trash"></i> <span>@lang('global.remove')</span>
             </a>
-        </div>
-    </div>
-    <div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">@lang('sOffers::global.confirm_delete')</div>
-                <div class="modal-body">
-                    @lang('sOffers::global.you_sure') <b id="confirm-name"></b> @lang('sOffers::global.with_id') <b id="confirm-id"></b>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">@lang('global.cancel')</button>
-                    <a class="btn btn-danger btn-ok">@lang('global.remove')</a>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 @endpush

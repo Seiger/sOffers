@@ -1,4 +1,11 @@
+@if(evo()->hasPermission('soffers_settings', 'mgr'))
+    <form method="post" action="{{ $url }}&get=featuresSchemaSave">
+        @csrf
+        <button type="submit" class="btn btn-secondary mb-3">@lang('sOffers::global.sync_language_fields')</button>
+    </form>
+@endif
 <form id="form" name="form" method="post" enctype="multipart/form-data" action="{!!$url!!}&get=featuresSave" onsubmit="documentDirty=false;">
+    @csrf
     <input type="hidden" name="back" value="&get=features" />
 
     <div class="row form-row widgets sortable">
@@ -67,12 +74,14 @@
     </script>
     <div id="actions">
         <div class="btn-group">
+            @if(evo()->hasPermission('soffers_features', 'mgr'))
             <a id="Button2" class="btn btn-primary" href="javascript:void(0);" onclick="addItem();">
                 <i class="fa fa-plus"></i><span>@lang('global.add')</span>
             </a>
             <a id="Button1" class="btn btn-success" href="javascript:void(0);" onclick="saveForm('#form');">
                 <i class="fas fa-save"></i><span>@lang('global.save')</span>
             </a>
+            @endif
             <a id="Button5" class="btn btn-secondary" href="{!!$url!!}">
                 <i class="fa fa-times-circle"></i><span>@lang('global.cancel')</span>
             </a>

@@ -6,18 +6,29 @@
 use EvolutionCMS\Models\SiteContent;
 use EvolutionCMS\Models\SiteTmplvar;
 use EvolutionCMS\Models\SiteTmplvarTemplate;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Seiger\sOffers\Controllers\sOfferController;
 use Seiger\sOffers\Models\sOFeature;
 use Seiger\sOffers\Models\sOffer;
 use Seiger\sOffers\Models\sOfferTranslate;
+use Seiger\sOffers\Support\ModuleAccess;
+use Seiger\sOffers\Support\ModuleSettings;
 
 if (!defined('IN_MANAGER_MODE') || IN_MANAGER_MODE != 'true') die("No access");
+
+ModuleAccess::requirePermission('soffers');
+$action = request()->input('get', 'offers');
+if (!is_string($action)) {
+    abort(400, 'Invalid offer action.');
+}
+if (in_array($action, ['offerSave', 'offerDelete', 'contentSave', 'tvsSave', 'featuresSave', 'featuresSchemaSave', 'settingsSave'], true)) {
+    ModuleAccess::requirePost();
+}
 
 $sOfferController = new sOfferController();
 $data['editor'] = '';
 $data['tabs'] = [];
-$data['get'] = request()->get ?? "offers";
+$data['get'] = $action;
 $data['sOfferController'] = $sOfferController;
 $data['lang_default'] = $sOfferController->langDefault();
 $data['url'] = $sOfferController->url;
@@ -25,7 +36,7 @@ $data['url'] = $sOfferController->url;
 switch ($data['get']) {
     default:
         $data['tabs'] = ['offers', 'features'];
-        if (evo()->hasPermission('settings')) {
+        if (evo()->hasPermission('soffers_settings', 'mgr')) {
             $data['tabs'][] = 'settings';
         }
         break;
@@ -43,7 +54,14 @@ switch ($data['get']) {
         }
         break;
     case "offerSave":
+        // Resolve creation versus editing from stored state, not a request flag.
         $offer = sOffer::where('s_offers.id', (int)request()->offer)->firstOrNew();
+        ModuleAccess::requirePermission($offer->exists ? 'soffers_save' : 'soffers_create');
+        if ((int)request()->published !== (int)($offer->published ?? 0)
+            || (string)request()->published_at !== (string)($offer->published_at ?? '')
+        ) {
+            ModuleAccess::requirePermission('soffers_publish');
+        }
         $offer->published = (int)request()->published;
         $offer->parent = (int)request()->parent;
         $offer->price = $sOfferController->validatePrice(request()->price);
@@ -62,6 +80,7 @@ switch ($data['get']) {
         $back = str_replace('&i=0', '&i=' . $offer->id, (request()->back ?? '&get=offers'));
         return header('Location: ' . $sOfferController->url . $back);
     case "offerDelete":
+        ModuleAccess::requirePermission('soffers_delete');
         $offer = DB::table('s_offers')->whereId((int)request()->i)->delete();
         DB::table('s_offer_translates')->whereOffer((int)request()->i)->delete();
 
@@ -86,7 +105,7 @@ switch ($data['get']) {
         $data['tvs_url'] = '&i='.request()->i;
         $data['constructor'] = [];
         $constructor = data_is_json($content->constructor ?? '', true);
-        $settings = require MODX_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php';
+        $settings = require EVO_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php';
         $editor = "introtext,content";
         if (is_array($settings)) {
             foreach ($settings as $setting) {
@@ -100,6 +119,7 @@ switch ($data['get']) {
         $data['content'] = $content;
         break;
     case "contentSave":
+        ModuleAccess::requirePermission('soffers_save');
         $content = sOfferTranslate::whereOffer((int)request()->offer)->whereLang(request()->lang)->firstOrNew();
         if (!$content->tid) {
             $content->offer = (int)request()->offer;
@@ -133,6 +153,7 @@ switch ($data['get']) {
         $data['tvValues'] = data_is_json($data['offer']->tmplvars, true) ?? [];
         break;
     case "tvsSave":
+        ModuleAccess::requirePermission('soffers_save');
         $offer = sOffers::getOffer((int)request()->offer);
         $template = SiteContent::find(evo()->getConfig('s_offers_resource', 0))->template ?? 0;
         $tvs = SiteTmplvar::query()
@@ -162,11 +183,15 @@ switch ($data['get']) {
         $back = str_replace('&i=0', '&i=' . $offer->id, (request()->back ?? '&get=tvs'));
         return header('Location: ' . $sOfferController->url . $back);
     case "features":
-        $sOfferController->setModifyTables();
         $data['tabs'] = ['offers', 'features'];
         $data['features'] = sOFeature::orderBy('position')->get();
         break;
+    case "featuresSchemaSave":
+        ModuleAccess::requirePermission('soffers_settings');
+        $sOfferController->setModifyTables();
+        return header('Location: ' . $sOfferController->url . '&get=features');
     case "featuresSave":
+        ModuleAccess::requirePermission('soffers_features');
         if (request()->filled('features')) {
             $features = request()->features;
             $sOFeatures = sOFeature::all();
@@ -190,6 +215,14 @@ switch ($data['get']) {
                     }
                 }
 
+                // Replacement can delete omitted features: authorize every deletion
+                // before the first update, so denial never leaves a partial save.
+                foreach ($sOFeatures as $sOFeature) {
+                    if (!isset($values[$sOFeature->alias])) {
+                        ModuleAccess::requirePermission('soffers_delete');
+                        break;
+                    }
+                }
                 foreach ($sOFeatures as $sOFeature) {
                     if (isset($values[$sOFeature->alias])) {
                         foreach ($values[$sOFeature->alias] as $field => $item) {
@@ -213,6 +246,7 @@ switch ($data['get']) {
                     }
                 }
             } else {
+                ModuleAccess::requirePermission('soffers_delete');
                 foreach ($sOFeatures as $sOFeature) {
                     $sOFeature->delete();
                 }
@@ -222,7 +256,7 @@ switch ($data['get']) {
         return header('Location: ' . $sOfferController->url . $back);
     case "settings":
         $data['tabs'] = ['offers', 'features'];
-        if (evo()->hasPermission('settings')) {
+        if (evo()->hasPermission('soffers_settings', 'mgr')) {
             $data['tabs'][] = 'settings';
         } else {
             $back = request()->back ?? '&get=offers';
@@ -230,43 +264,26 @@ switch ($data['get']) {
         }
         break;
     case "settingsSave":
-        if (request()->has('parent') && request()->parent != evo()->getConfig('s_offers_resource')) {
-            $resource = request()->parent;
-            $tbl = evo()->getDatabase()->getFullTableName('system_settings');
-            evo()->getDatabase()->query("REPLACE INTO {$tbl} (`setting_name`, `setting_value`) VALUES ('s_offers_resource', '{$resource}')");
+        ModuleAccess::requirePermission('soffers_settings');
+        try {
+            $settings = ModuleSettings::normalize(request()->input('settings', []));
+            $resource = request()->has('parent') ? ModuleSettings::resourceId(request()->input('parent')) : null;
+            if ($resource !== null && $resource > 0 && !SiteContent::whereKey($resource)->exists()) {
+                throw new \InvalidArgumentException('The selected resource does not exist.');
+            }
+        } catch (\InvalidArgumentException $exception) {
+            abort(422, $exception->getMessage());
+        }
+
+        ModuleSettings::save(
+            EVO_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php',
+            $settings,
+            $resource
+        );
+        if ($resource !== null) {
             evo()->setConfig('s_offers_resource', $resource);
-            evo()->clearCache('full');
         }
-
-        $keys = request()->input('settings.key', []);
-        $settings = [];
-        if (count($keys)) {
-            foreach ($keys as $idx => $key) {
-                $key = Str::slug($key);
-                $key = Str::lower($key);
-                $settings[$key] = [
-                    'key' => $key,
-                    'name' => request()->input('settings')['name'][$idx],
-                    'type' => request()->input('settings')['type'][$idx],
-                ];
-            }
-        }
-
-        $f = fopen(MODX_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php', "w");
-        fwrite($f, '<?php return [' . "\r\n");
-        if (count($settings)) {
-            foreach ($settings as $key => $setting) {
-                if (trim($key)) {
-                    fwrite($f, "\t'" . $key . "' => [" . "\r\n");
-                    foreach ($setting as $k => $v) {
-                        fwrite($f, "\t\t'" . $k . "' => '" . $v . "',\r\n");
-                    }
-                    fwrite($f, "\t]" . ",\r\n");
-                }
-            }
-        }
-        fwrite($f, "];");
-        fclose($f);
+        evo()->clearCache('full');
         sleep(10);
 
         $back = request()->back ?? '&get=settings';

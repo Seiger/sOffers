@@ -8,7 +8,13 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Seiger\sOffers\Models\sOFeature;
 use Seiger\sOffers\Models\sOffer;
+use Seiger\sOffers\Support\ModuleAccess;
 
+/**
+ * Render the manager module and provide its offer, language and schema helpers.
+ *
+ * Mutating module branches authorize their own actions before invoking helpers.
+ */
 class sOfferController
 {
     public $url;
@@ -23,12 +29,13 @@ class sOfferController
     }
 
     /**
-     * Show tab page with sOffer files
+     * Render the package route entry for managers with sOffers access.
      *
      * @return View
      */
     public function index(): View
     {
+        ModuleAccess::requirePermission('soffers');
         return $this->view('index');
     }
 
@@ -59,12 +66,17 @@ class sOfferController
     }
 
     /**
-     * Modifying table feature values for translates
+     * Add missing feature translation columns through the explicit manager schema action.
+     *
+     * Requires sOffers settings permission and a token-protected POST even for direct callers.
+     * Opening the features tab never invokes this DDL helper.
      *
      * @return void
      */
     public function setModifyTables(): void
     {
+        ModuleAccess::requirePermission('soffers_settings');
+        ModuleAccess::requirePost();
         $needs = [];
         $columns = [];
         $lang = $this->langList();
@@ -147,13 +159,13 @@ class sOfferController
     }
 
     /**
-     * Module url
+     * Build the registered file-module URL with the CMS token required by action 112.
      *
      * @return string
      */
     protected function moduleUrl(): string
     {
-        return 'index.php?a=112&id=' . md5(__('sOffers::global.offers'));
+        return 'index.php?a=112&id=' . md5(__('sOffers::global.offers')) . '&_token=' . rawurlencode(csrf_token());
     }
 
     /**

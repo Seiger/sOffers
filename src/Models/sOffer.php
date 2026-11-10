@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\DB;
 use Seiger\sOffers\Controllers\sOfferController;
 use Seiger\sOffers\Models\sOFeature;
 
+/**
+ * Store offers and expose locale-aware content, cover URLs and frontend links.
+ *
+ * Asset paths and absolute URLs use the Evolution CMS bootstrap constants.
+ */
 class sOffer extends Model
 {
     /**
@@ -70,25 +75,28 @@ class sOffer extends Model
     }
 
     /**
-     * Get the offer cover src link
+     * Resolve a cover below the CMS base path or return the package placeholder URL.
      *
-     * @return string cover_src
+     * @return string Absolute asset URL using the CMS site URL.
      */
     public function getCoverSrcAttribute()
     {
-        if (!empty($this->cover) && is_file(MODX_BASE_PATH . $this->cover)) {
-            $coverSrc = MODX_SITE_URL . $this->cover;
+        if (!empty($this->cover) && is_file(EVO_BASE_PATH . $this->cover)) {
+            $coverSrc = EVO_SITE_URL . $this->cover;
         } else {
-            $coverSrc = MODX_SITE_URL . 'assets/images/noimage.png';
+            $coverSrc = EVO_SITE_URL . 'assets/images/noimage.png';
         }
 
         return $coverSrc;
     }
 
     /**
-     * Get the offer link
+     * Build a frontend link from the parent resource, alias and CMS URL suffix.
      *
-     * @return string link
+     * A zero parent uses the site-start resource on this model instance. Relative
+     * parent URLs are expanded against the CMS site URL before appending the alias.
+     *
+     * @return string Offer URL.
      */
     public function getLinkAttribute()
     {
@@ -97,7 +105,7 @@ class sOffer extends Model
         }
         $base_url = UrlProcessor::makeUrl($this->parent);
         if (str_starts_with($base_url, '/')) {
-            $base_url = MODX_SITE_URL . ltrim($base_url, '/');
+            $base_url = EVO_SITE_URL . ltrim($base_url, '/');
         }
         return $base_url.$this->alias.evo()->getConfig('friendly_url_suffix', '');
     }

@@ -44,6 +44,9 @@
         </div>
     </div>
 
+    <form id="soffer-delete-form" method="post" hidden>
+        @csrf
+    </form>
     <img src="{{evo()->getConfig('site_url', '/')}}assets/images/noimage.png" id="img-preview" style="display: none;" class="post-thumbnail">
 
     <div id="copyright">
@@ -113,7 +116,9 @@
                         "@lang('sOffers::global.you_sure') <b>"+_this.attr('data-name')+"</b> @lang('sOffers::global.with_id') <b>"+_this.attr('data-delete')+"</b>",
                         function() {
                             alertify.success("@lang('sOffers::global.deleted')");
-                            window.location.href = _this.attr('data-href');
+                            var deleteForm = document.getElementById('soffer-delete-form');
+                            deleteForm.action = _this.attr('data-href');
+                            deleteForm.submit();
                         },
                         function() {
                             alertify.error("@lang('global.cancel')");
@@ -147,6 +152,9 @@
         }
 
         function tabSave(starget) {
+            if (!document.form || !document.getElementById('Button1')) {
+                return;
+            }
             document.form.back.value = starget;
             saveForm('#form');
         }

@@ -3,28 +3,31 @@
 use EvolutionCMS\ServiceProvider;
 use Event;
 
+/**
+ * Register the package, manager translations and CLI-discoverable migrations.
+ */
 class sOfferServiceProvider extends ServiceProvider
 {
     /**
-     * Bootstrap the application services.
+     * Load migrations in every context and expose manager routes, views and assets.
+     *
+     * The permission lexicon uses the shared Seiger group key also used by sTask.
      *
      * @return void
      */
     public function boot()
     {
+        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations');
+        $this->loadTranslationsFrom(dirname(__DIR__) . '/lang', 'sOffers');
+        $this->registerManagerPermissionLexicon();
+
         // Only Manager
         if (IN_MANAGER_MODE) {
             // Add custom routes for package
             include(__DIR__ . '/Http/routes.php');
 
-            // Migration for create tables
-            $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations');
-
             // Views
             $this->loadViewsFrom(dirname(__DIR__) . '/views', 'sOffers');
-
-            // MultiLang
-            $this->loadTranslationsFrom(dirname(__DIR__) . '/lang', 'sOffers');
 
             // For use config
             $this->publishes([
@@ -36,6 +39,29 @@ class sOfferServiceProvider extends ServiceProvider
 
         $this->app->singleton(sOffers::class);
         $this->app->alias(sOffers::class, 'sOffers');
+    }
+
+    /**
+     * Bridge package labels into the manager role editor's legacy lexicon.
+     *
+     * Reuse sTask's seiger_packages key so both packages appear in the same group.
+     * Registration is deferred until ManagerTheme resolves, as in sTask.
+     *
+     * @return void
+     * @since 1.1.0
+     */
+    protected function registerManagerPermissionLexicon(): void
+    {
+        if (!defined('IN_MANAGER_MODE') || !IN_MANAGER_MODE) {
+            return;
+        }
+        $this->app->afterResolving('ManagerTheme', function ($managerTheme): void {
+            $managerTheme->setLexicon('seiger_packages', __('sOffers::global.permissions_group'));
+            foreach (['access', 'create', 'save', 'delete', 'publish', 'features', 'settings'] as $action) {
+                $key = 'sOffers::global.permission_' . $action;
+                $managerTheme->setLexicon($key, __($key));
+            }
+        });
     }
 
     /**

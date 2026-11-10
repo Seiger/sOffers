@@ -54,4 +54,13 @@
     'website_help' => 'The site representing the company from which the offer is given.',
     'tvs' => 'Options (TV)',
     'tvs_icon' => 'fab fa-modx',
+    'sync_language_fields' => 'Update feature language columns',
+    'permissions_group' => 'Seiger packages',
+    'permission_access' => 'Access sOffers',
+    'permission_create' => 'Create sOffers offers',
+    'permission_save' => 'Edit sOffers offers, content and TV values',
+    'permission_delete' => 'Delete sOffers offers and features',
+    'permission_publish' => 'Change sOffers publication and publication date',
+    'permission_features' => 'Manage sOffers features',
+    'permission_settings' => 'Configure sOffers and update feature language columns',
 ];
