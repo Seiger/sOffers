@@ -15,6 +15,13 @@ use Seiger\sOffers\Models\sOFeature;
 class sOffer extends Model
 {
     /**
+     * Guard all attributes from mass assignment. Module writes set fields explicitly.
+     *
+     * @var array<int, string>
+     */
+    protected $guarded = ['*'];
+
+    /**
      * The accessors to append to the model's array form.
      *
      * @var array
