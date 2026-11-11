@@ -7,6 +7,7 @@
 <form id="form" name="form" method="post" enctype="multipart/form-data" action="{!!$url!!}&get=featuresSave" onsubmit="documentDirty=false;">
     @csrf
     <input type="hidden" name="back" value="&get=features" />
+    <div id="deleted-features"></div>
 
     <div class="row form-row widgets sortable">
         @foreach($features as $feature)
@@ -14,7 +15,9 @@
                 <div class="card">
                     <div class="card-header">
                         <i style="cursor:pointer;font-size:x-large;" class="fas fa-sort"></i>&emsp; {{$feature->base ?? ''}}
-                        <span class="close-icon"><i class="fa fa-times"></i></span>
+                        @if(evo()->hasPermission('soffers_features', 'mgr') && evo()->hasPermission('soffers_delete', 'mgr'))
+                            <span class="close-icon"><i class="fa fa-times"></i></span>
+                        @endif
                     </div>
                     <div class="card-block">
                         <div class="userstable">
@@ -32,16 +35,20 @@
                                         <label class="warning">@lang('sOffers::global.color')</label>
                                     </div>
                                     <div class="col">
-                                        <input type="text" class="form-control" name="features[color][]" maxlength="255" value="{{$feature->color ?? ''}}" onchange="documentDirty=true;" spellcheck="true">
+                                        <input type="text" class="form-control" name="features[color][]" maxlength="100" value="{{$feature->color ?? ''}}" onchange="documentDirty=true;" spellcheck="true">
                                     </div>
                                 </div>
                                 @foreach($sOfferController->langList() as $idx => $lang)
+                                    @php($featureText = $feature->{$lang} ?? '')
+                                    @if($lang === $lang_default && $featureText === '')
+                                        @php($featureText = $feature->base ?? '')
+                                    @endif
                                     <div class="row form-row">
                                         <div class="col-auto col-title-6">
                                             <label class="warning">@lang('sOffers::global.content') @if($lang != 'base')<span class="badge bg-seigerit">{{$lang}}</span>@endif</label>
                                         </div>
                                         <div class="col">
-                                            <input type="text" class="form-control" name="features[{{$lang}}][]" maxlength="255" value="{{$feature->{$lang} ?? ''}}" onchange="documentDirty=true;" spellcheck="true">
+                                            <input type="text" class="form-control" name="features[{{$lang}}][]" maxlength="255" value="{{$featureText}}" onchange="documentDirty=true;" spellcheck="true">
                                         </div>
                                     </div>
                                 @endforeach
@@ -69,7 +76,15 @@
         .draft-value{display:none;}
     </style>
     <script>
-        $(document).on("click", ".close-icon", function () {$(this).closest('.card').remove();documentDirty=true;});
+        $(document).on("click", ".close-icon", function () {
+            var card = $(this).closest('.card');
+            var id = card.find('[name="features[fid][]"]').val();
+            if (id && id !== '0') {
+                $('<input>', {type: 'hidden', name: 'deleted_features[]', value: id}).appendTo('#deleted-features');
+            }
+            card.remove();
+            documentDirty=true;
+        });
         function addItem() {$(".widgets").append($('.draft-value').html());}
     </script>
     <div id="actions">
@@ -110,7 +125,7 @@
                                     <label class="warning">@lang('sOffers::global.color')</label>
                                 </div>
                                 <div class="col">
-                                    <input type="text" class="form-control" name="features[color][]" maxlength="255" value="" onchange="documentDirty=true;" spellcheck="true">
+                                    <input type="text" class="form-control" name="features[color][]" maxlength="100" value="" onchange="documentDirty=true;" spellcheck="true">
                                 </div>
                             </div>
                             @foreach($sOfferController->langList() as $idx => $lang)

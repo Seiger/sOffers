@@ -11,18 +11,16 @@ use Seiger\sOffers\Controllers\sOfferController;
 use Seiger\sOffers\Models\sOFeature;
 use Seiger\sOffers\Models\sOffer;
 use Seiger\sOffers\Models\sOfferTranslate;
-use Seiger\sOffers\Support\ModuleAccess;
-use Seiger\sOffers\Support\ModuleSettings;
 
 if (!defined('IN_MANAGER_MODE') || IN_MANAGER_MODE != 'true') die("No access");
 
-ModuleAccess::requirePermission('soffers');
+sOfferController::requirePermission('soffers');
 $action = request()->input('get', 'offers');
 if (!is_string($action)) {
-    abort(400, 'Invalid offer action.');
+    sOfferController::reject(400, 'Invalid offer action.');
 }
 if (in_array($action, ['offerSave', 'offerDelete', 'contentSave', 'tvsSave', 'featuresSave', 'featuresSchemaSave', 'settingsSave'], true)) {
-    ModuleAccess::requirePost();
+    sOfferController::requirePost();
 }
 
 $sOfferController = new sOfferController();
@@ -30,7 +28,11 @@ $data['editor'] = '';
 $data['tabs'] = [];
 $data['get'] = $action;
 $data['sOfferController'] = $sOfferController;
-$data['lang_default'] = $sOfferController->langDefault();
+try {
+    $data['lang_default'] = $sOfferController->langDefault();
+} catch (\InvalidArgumentException $exception) {
+    sOfferController::reject(422, $exception->getMessage());
+}
 $data['url'] = $sOfferController->url;
 
 switch ($data['get']) {
@@ -56,11 +58,11 @@ switch ($data['get']) {
     case "offerSave":
         // Resolve creation versus editing from stored state, not a request flag.
         $offer = sOffer::where('s_offers.id', (int)request()->offer)->firstOrNew();
-        ModuleAccess::requirePermission($offer->exists ? 'soffers_save' : 'soffers_create');
+        sOfferController::requirePermission($offer->exists ? 'soffers_save' : 'soffers_create');
         if ((int)request()->published !== (int)($offer->published ?? 0)
             || (string)request()->published_at !== (string)($offer->published_at ?? '')
         ) {
-            ModuleAccess::requirePermission('soffers_publish');
+            sOfferController::requirePermission('soffers_publish');
         }
         $offer->published = (int)request()->published;
         $offer->parent = (int)request()->parent;
@@ -80,7 +82,7 @@ switch ($data['get']) {
         $back = str_replace('&i=0', '&i=' . $offer->id, (request()->back ?? '&get=offers'));
         return header('Location: ' . $sOfferController->url . $back);
     case "offerDelete":
-        ModuleAccess::requirePermission('soffers_delete');
+        sOfferController::requirePermission('soffers_delete');
         $offer = DB::table('s_offers')->whereId((int)request()->i)->delete();
         DB::table('s_offer_translates')->whereOffer((int)request()->i)->delete();
 
@@ -119,7 +121,7 @@ switch ($data['get']) {
         $data['content'] = $content;
         break;
     case "contentSave":
-        ModuleAccess::requirePermission('soffers_save');
+        sOfferController::requirePermission('soffers_save');
         $content = sOfferTranslate::whereOffer((int)request()->offer)->whereLang(request()->lang)->firstOrNew();
         if (!$content->tid) {
             $content->offer = (int)request()->offer;
@@ -153,7 +155,7 @@ switch ($data['get']) {
         $data['tvValues'] = data_is_json($data['offer']->tmplvars, true) ?? [];
         break;
     case "tvsSave":
-        ModuleAccess::requirePermission('soffers_save');
+        sOfferController::requirePermission('soffers_save');
         $offer = sOffers::getOffer((int)request()->offer);
         $template = SiteContent::find(evo()->getConfig('s_offers_resource', 0))->template ?? 0;
         $tvs = SiteTmplvar::query()
@@ -187,70 +189,18 @@ switch ($data['get']) {
         $data['features'] = sOFeature::orderBy('position')->get();
         break;
     case "featuresSchemaSave":
-        ModuleAccess::requirePermission('soffers_settings');
-        $sOfferController->setModifyTables();
+        sOfferController::requirePermission('soffers_settings');
+        try {
+            $sOfferController->setModifyTables();
+        } catch (\InvalidArgumentException $exception) {
+            sOfferController::reject(422, $exception->getMessage());
+        }
         return header('Location: ' . $sOfferController->url . '&get=features');
     case "featuresSave":
-        ModuleAccess::requirePermission('soffers_features');
-        if (request()->filled('features')) {
-            $features = request()->features;
-            $sOFeatures = sOFeature::all();
-            if (count($features)) {
-                $values = [];
-                $fields = array_keys($features);
-
-                foreach ($features['fid'] as $idx => $fid) {
-                    $array = [];
-                    foreach ($fields as $field) {
-                        $array[$field] = $features[$field][$idx];
-                    }
-                    if (count(array_diff($array, [""]))) {
-                        $array['position'] = $idx;
-                        if ($sOfferController->langDefault() != 'base') {
-                            $array['base'] = $array[$sOfferController->langDefault()];
-                        }
-                        $array['alias'] = $sOfferController->validateAlias(trim($array['alias'] ?? '') ?: $array['base'], $array['fid'] ?? 0, 'feature');
-                        unset($array['fid']);
-                        $values[$array['alias']] = $array;
-                    }
-                }
-
-                // Replacement can delete omitted features: authorize every deletion
-                // before the first update, so denial never leaves a partial save.
-                foreach ($sOFeatures as $sOFeature) {
-                    if (!isset($values[$sOFeature->alias])) {
-                        ModuleAccess::requirePermission('soffers_delete');
-                        break;
-                    }
-                }
-                foreach ($sOFeatures as $sOFeature) {
-                    if (isset($values[$sOFeature->alias])) {
-                        foreach ($values[$sOFeature->alias] as $field => $item) {
-                            $sOFeature->{$field} = $item;
-                        }
-                        $sOFeature->update();
-
-                        unset($values[$sOFeature->alias]);
-                    } else {
-                        $sOFeature->delete();
-                    }
-                }
-
-                if (count($values)) {
-                    foreach ($values as $value) {
-                        $sOFeature = new sOFeature();
-                        foreach ($value as $field => $item) {
-                            $sOFeature->{$field} = $item;
-                        }
-                        $sOFeature->save();
-                    }
-                }
-            } else {
-                ModuleAccess::requirePermission('soffers_delete');
-                foreach ($sOFeatures as $sOFeature) {
-                    $sOFeature->delete();
-                }
-            }
+        try {
+            $sOfferController->saveFeatures(request()->input('features', []), request()->input('deleted_features', []));
+        } catch (\InvalidArgumentException $exception) {
+            sOfferController::reject(422, $exception->getMessage());
         }
         $back = request()->back ?? '&get=features';
         return header('Location: ' . $sOfferController->url . $back);
@@ -264,18 +214,18 @@ switch ($data['get']) {
         }
         break;
     case "settingsSave":
-        ModuleAccess::requirePermission('soffers_settings');
+        sOfferController::requirePermission('soffers_settings');
         try {
-            $settings = ModuleSettings::normalize(request()->input('settings', []));
-            $resource = request()->has('parent') ? ModuleSettings::resourceId(request()->input('parent')) : null;
+            $settings = $sOfferController->normalizeSettings(request()->input('settings', []));
+            $resource = request()->has('parent') ? $sOfferController->parseResourceId(request()->input('parent')) : null;
             if ($resource !== null && $resource > 0 && !SiteContent::whereKey($resource)->exists()) {
                 throw new \InvalidArgumentException('The selected resource does not exist.');
             }
         } catch (\InvalidArgumentException $exception) {
-            abort(422, $exception->getMessage());
+            sOfferController::reject(422, $exception->getMessage());
         }
 
-        ModuleSettings::save(
+        $sOfferController->saveSettings(
             EVO_BASE_PATH . 'core/custom/config/cms/settings/sOffer.php',
             $settings,
             $resource

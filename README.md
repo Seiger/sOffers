@@ -6,6 +6,7 @@
 [![Issues](https://img.shields.io/github/issues/Seiger/soffers)](https://github.com/Seiger/soffer/soffers)
 [![Stars](https://img.shields.io/packagist/stars/Seiger/soffers)](https://packagist.org/packages/seiger/soffers)
 [![Total Downloads](https://img.shields.io/packagist/dt/seiger/soffers)](https://packagist.org/packages/seiger/soffers)
+![Made in Ukraine](https://img.shields.io/badge/made_in-Ukraine-ffd700.svg?labelColor=0057b7)
 
 **sOffers** Module for records management in the Evolution CMS admin panel.
 
@@ -56,15 +57,14 @@ the package does not define per-offer access groups.
 | `soffers` | Open sOffers and read its offers/features |
 | `soffers_create` | Create offers |
 | `soffers_save` | Edit offers, translations and TV values |
-| `soffers_delete` | Delete offers or remove features during full-set replacement |
+| `soffers_delete` | Delete offers or explicitly selected features |
 | `soffers_publish` | Change publication state or publication date, including on creation |
-| `soffers_features` | Save the feature set; removing omitted rows also requires `soffers_delete` |
+| `soffers_features` | Create/edit/reorder features; explicit deletion also requires `soffers_delete` |
 | `soffers_settings` | View/save settings and explicitly update feature language columns |
 
 All mutating module branches require POST and the CMS manager-session CSRF token.
 Opening the features tab is read-only; its separate **Update feature language columns**
-button performs the settings-authorized schema update. The SQL-identifier validation
-work tracked in audit item B-05 remains separate from these access checks.
+button performs the settings-authorized schema update through Schema Builder.
 
 Settings definitions keep their existing PHP-array format and use `var_export` plus
 same-directory temporary files, a writer lock and atomic rename. The settings directory
@@ -81,6 +81,45 @@ Database rollback requires a transactional `system_settings` table. File/databas
 coordination restores the previous file on caught failures; it cannot provide a
 distributed transaction across a process crash or a lost database commit acknowledgement.
 The configuration directory must remain trusted and unavailable for writes by other users.
+
+## Feature editing and languages
+
+Existing features are updated by `fid`. Renaming or reordering preserves IDs and offer
+relations. Omitted rows and an empty `features` array preserve stored records. Only
+positive IDs explicitly submitted in `deleted_features[]` delete features; the form
+records these IDs when an existing row is removed. Deleting also removes its rows
+from `s_offer_features` inside the same transaction. Both tables must support transactions.
+
+The server accepts `fid`, `alias`, `badge`, `color` and configured language fields.
+Unknown/system fields, mismatched arrays, duplicate IDs/aliases and stale IDs are
+rejected before writes. Each save accepts up to 250 rows and 250 deletion IDs.
+Text fields allow 255 Unicode characters; color allows 100. Aliases are slug-normalized
+and must remain unique; collisions are rejected. Position follows submitted row order,
+and `base` mirrors the default-language text. An explicit deletion needs both
+`soffers_features` and `soffers_delete`.
+
+With sLang available, `s_lang_config` selects codes from `sLang::langList()`.
+Codes are trimmed and lowercased. Unknown codes, invalid identifiers, duplicates,
+empty segments and a default outside the configured list are rejected.
+Without sLang, sOffers uses `base` even if multilingual settings remain in the CMS.
+Correct invalid language configuration through the CMS language settings before
+opening sOffers.
+
+The explicit language-column action creates only missing allowed columns with empty
+defaults and preserves existing values. It includes a sole non-base default language.
+If the default-language value is empty, its form field shows the existing `base` text
+so older base-only feature data can be retained when editing.
+Feature saves require the configured columns to exist and never run DDL themselves.
+Schema changes have the target database's DDL/locking behavior; a failed schema update
+may need to be retried. Concurrent edits still depend on the target transaction isolation;
+per-record version checking is not part of this change.
+
+Manager labels use a separate fixed `en/uk/ru` file map. The manager session takes
+precedence over a literal locale read from the CMS cache. Unknown values fall back
+to English; cache PHP is never evaluated. Resolved translation paths must stay within
+the package language directory. Missing/invalid localized labels use English, and an
+unavailable English fallback raises a controlled exception. The package language
+directory must remain trusted.
 
 ## Isolated regression checks
 
@@ -100,4 +139,11 @@ the Blade templates without rendering them or bootstrapping the CMS:
 
 ```console
 php tests/compile-views.php /path/to/cms/core/vendor
+```
+
+P1 checks use a fake CMS and SQLite `:memory:` with installed Illuminate components;
+they do not connect to a live database or run CMS migrations:
+
+```console
+php tests/p1-regression.php /path/to/cms/core/vendor
 ```

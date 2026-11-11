@@ -2,12 +2,15 @@
 
 use EvolutionCMS\ServiceProvider;
 use Event;
+use RuntimeException;
 
 /**
  * Register the package, manager translations and CLI-discoverable migrations.
  */
 class sOfferServiceProvider extends ServiceProvider
 {
+    private const MANAGER_LANGUAGE_FILES = ['en' => 'en/global.php', 'uk' => 'uk/global.php', 'ru' => 'ru/global.php'];
+
     /**
      * Load migrations in every context and expose manager routes, views and assets.
      *
@@ -65,7 +68,9 @@ class sOfferServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register the service provider.
+     * Register package plugins and the manager module with allowlisted labels.
+     *
+     * Locale values select fixed package files. The CMS cache is read as text.
      *
      * @return void
      */
@@ -76,21 +81,80 @@ class sOfferServiceProvider extends ServiceProvider
 
         // Only Manager
         if (IN_MANAGER_MODE) {
-            // Add module to Evo. Module ID is md5('sOfferModule').
-            $lang = 'en';
-            if (isset($_SESSION['mgrUsrConfigSet']['manager_language'])) {
-                $lang = $_SESSION['mgrUsrConfigSet']['manager_language'];
-            } else {
-                if (is_file(evo()->getSiteCacheFilePath())) {
-                    $siteCache = file_get_contents(evo()->getSiteCacheFilePath());
-                    preg_match('@\$c\[\'manager_language\'\]="\w+@i', $siteCache, $matches);
-                    if (count($matches)) {
-                        $lang = str_replace('$c[\'manager_language\']="', '', $matches[0]);
-                    }
-                }
-            }
-            $lang = include_once dirname(__DIR__) . '/lang/' . $lang . '/global.php';
+            $lang = $this->loadManagerLanguage(
+                $_SESSION['mgrUsrConfigSet']['manager_language'] ?? null,
+                evo()->getSiteCacheFilePath()
+            );
             $this->app->registerModule($lang['offers'], dirname(__DIR__) . '/module/sOfferModule.php', $lang['offers_icon']);
         }
+    }
+
+    /**
+     * Resolve the manager labels from the session locale or the cached locale.
+     *
+     * An unsupported locale or invalid localized file falls back to English.
+     * The cache is read as text and the translation file is loaded on each
+     * registration so it always returns its labels.
+     *
+     * @param mixed $sessionLocale Manager-session language, or null to consult cache.
+     * @param string $cachePath Cache path supplied by the CMS.
+     * @return array<string, mixed> Labels including string offers and offers_icon.
+     * @throws RuntimeException When no valid English fallback exists.
+     * @since 1.1.0
+     */
+    private function loadManagerLanguage($sessionLocale, string $cachePath): array
+    {
+        $locale = $sessionLocale;
+        if ($locale === null && is_file($cachePath) && is_readable($cachePath)) {
+            $cache = @file_get_contents($cachePath, false, null, 0, 1048576);
+            if (is_string($cache) && preg_match('/\$c\[([\'"])manager_language\1\]\s*=\s*([\'"])([a-z-]+)\2\s*;/i', $cache, $matches)) {
+                $locale = $matches[3];
+            }
+        }
+        $locale = is_string($locale) ? strtolower(trim($locale)) : 'en';
+        $locale = isset(self::MANAGER_LANGUAGE_FILES[$locale]) ? $locale : 'en';
+        $labels = $this->readManagerLanguage($locale);
+        if ($labels === null && $locale !== 'en') {
+            $labels = $this->readManagerLanguage('en');
+        }
+        if ($labels === null) {
+            throw new RuntimeException('The sOffers English manager labels are missing or invalid.');
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Load an allowlisted translation whose resolved path stays inside package lang.
+     *
+     * @param string $locale Internal allowlisted locale.
+     * @return array<string, mixed>|null Valid labels or an unavailable or invalid file.
+     * @since 1.1.0
+     */
+    private function readManagerLanguage(string $locale): ?array
+    {
+        $root = realpath(dirname(__DIR__) . '/lang');
+        if ($root === false || !isset(self::MANAGER_LANGUAGE_FILES[$locale])) {
+            return null;
+        }
+        $path = realpath($root . '/' . self::MANAGER_LANGUAGE_FILES[$locale]);
+        if ($path === false || strpos($path, $root . DIRECTORY_SEPARATOR) !== 0
+            || !is_file($path) || !is_readable($path)
+        ) {
+            return null;
+        }
+        try {
+            $labels = require $path;
+        } catch (\Throwable $exception) {
+            return null;
+        }
+        if (!is_array($labels) || !isset($labels['offers'], $labels['offers_icon'])
+            || !is_string($labels['offers']) || $labels['offers'] === ''
+            || !is_string($labels['offers_icon']) || $labels['offers_icon'] === ''
+        ) {
+            return null;
+        }
+
+        return $labels;
     }
 }
