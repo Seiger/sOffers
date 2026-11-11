@@ -24,6 +24,8 @@ use Seiger\sOffers\Models\sOffer;
  */
 class sOfferController
 {
+    public const MODULE_ID_BINDING = 'sOffers.moduleId';
+
     public $url;
 
     /**
@@ -648,13 +650,21 @@ class sOfferController
     }
 
     /**
-     * Build the registered file-module URL with the CMS token required by action 112.
+     * Build the action 112 URL using the ID returned by manager registration.
+     *
+     * Keep the generated URL available to frontend and CLI callers that run
+     * without file-module registration.
      *
      * @return string
      */
     protected function moduleUrl(): string
     {
-        return 'index.php?a=112&id=' . md5(__('sOffers::global.offers')) . '&_token=' . rawurlencode(csrf_token());
+        $app = evo();
+        $moduleId = $app->bound(self::MODULE_ID_BINDING)
+            ? $app->make(self::MODULE_ID_BINDING)
+            : md5(__('sOffers::global.offers'));
+
+        return 'index.php?a=112&id=' . $moduleId . '&_token=' . rawurlencode(csrf_token());
     }
 
     /**

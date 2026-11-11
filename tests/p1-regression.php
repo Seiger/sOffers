@@ -104,6 +104,8 @@ namespace {
         public function getConfig($key, $default = null) { return $this->config[$key] ?? $default; }
         /** Check registered services in the isolated Laravel container. @since 1.1.0 */
         public function bound($key) { return Facade::getFacadeApplication()->bound($key); }
+        /** Resolve the module ID from the same container as the provider. @since 1.1.0 */
+        public function make($key) { return Facade::getFacadeApplication()->make($key); }
         /** Supply an authenticated fake manager. @since 1.1.0 */
         public function getLoginUserID($context) { return $context === 'mgr' ? 1 : 0; }
         /** Require the same explicit manager context as production. @since 1.1.0 */
@@ -125,11 +127,15 @@ namespace {
         public function header($key) { return null; }
     }
     /** Module-registration recorder for the actual provider method. @since 1.1.0 */
-    class P1App
+    class P1App extends Container
     {
         public $modules = [];
-        /** Capture labels and paths without executing a module. @since 1.1.0 */
-        public function registerModule($name, $path, $icon) { $this->modules[] = [$name, $path, $icon]; }
+        /** Capture registration and return the label-based ID used by Evo. @since 1.1.0 */
+        public function registerModule($name, $path, $icon)
+        {
+            $this->modules[] = [$name, $path, $icon];
+            return md5($name);
+        }
     }
     function evo() { return $GLOBALS['cms']; }
     function request() { return $GLOBALS['request']; }
@@ -170,15 +176,15 @@ namespace {
     $_SESSION = ['_token' => 'test-token'];
     define('IN_MANAGER_MODE', true);
     define('EVO_MANAGER_URL', 'https://example.invalid/manager/');
-    $controller = new sOfferController();
 
-    $container = new Container();
+    $container = new P1App();
     $capsule = new Capsule($container);
     $capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => 'p1_']);
     $capsule->setEventDispatcher(new Dispatcher($container));
     $capsule->setAsGlobal();
     $capsule->bootEloquent();
     Facade::setFacadeApplication($container);
+    $controller = new sOfferController();
     $container->instance('db', $capsule->getDatabaseManager());
     $container->bind('db.schema', function () use ($capsule) { return $capsule->getConnection()->getSchemaBuilder(); });
     $router = new Router(new Dispatcher($container), $container);
@@ -351,7 +357,7 @@ namespace {
     if ($cache === false) { throw new RuntimeException('Cannot create the cache fixture.'); }
     $cms->cachePath = $cache;
     try {
-        $app = new P1App();
+        $app = $container;
         $provider = new sOfferServiceProvider($app);
         $registeredModule = function ($locale) use ($app, $provider) {
             $_SESSION['mgrUsrConfigSet']['manager_language'] = $locale;
@@ -365,6 +371,12 @@ namespace {
         };
         $english = $expectedModule('en');
         $ukrainian = $expectedModule('uk');
+        foreach (['en' => $english, 'uk' => $ukrainian, 'fr' => $english] as $locale => $expected) {
+            check($registeredModule($locale) === $expected, 'Unexpected registered module for ' . $locale);
+            $controller = new sOfferController();
+            parse_str(parse_url($controller->index()->getTargetUrl(), PHP_URL_QUERY), $query);
+            check($query['id'] === md5($expected[0]), 'Redirect did not use the registered ID for ' . $locale);
+        }
         file_put_contents($cache, '<?php $c["manager_language"]="uk";');
         check($registeredModule(null) === $ukrainian, 'Cache locale was not read as a literal.');
         check($registeredModule('en') === $english, 'Session locale did not take precedence.');

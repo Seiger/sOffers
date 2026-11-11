@@ -94,6 +94,8 @@ namespace {
         public function hasPermission($key, $context = 'mgr') { check($context === 'mgr', 'Wrong permission context.'); return in_array($key, $this->permissions, true); }
         /** Supply defaults used by the real controller. @since 1.1.0 */
         public function getConfig($key, $default = null) { return $default; }
+        /** Standalone dispatch runs without CMS module registration. @since 1.1.0 */
+        public function bound($key) { return false; }
         /** Count unexpected config writes. @since 1.1.0 */
         public function setConfig(...$arguments) { $this->effects++; }
         /** Count unexpected cache writes. @since 1.1.0 */

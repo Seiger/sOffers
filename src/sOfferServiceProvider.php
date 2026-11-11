@@ -3,6 +3,7 @@
 use EvolutionCMS\ServiceProvider;
 use Event;
 use RuntimeException;
+use Seiger\sOffers\Controllers\sOfferController;
 
 /**
  * Register the package, manager translations and CLI-discoverable migrations.
@@ -71,6 +72,7 @@ class sOfferServiceProvider extends ServiceProvider
      * Register package plugins and the manager module with allowlisted labels.
      *
      * Locale values select fixed package files. The CMS cache is read as text.
+     * Bind the CMS-issued ID for redirects and links within this application.
      *
      * @return void
      */
@@ -85,7 +87,10 @@ class sOfferServiceProvider extends ServiceProvider
                 $_SESSION['mgrUsrConfigSet']['manager_language'] ?? null,
                 evo()->getSiteCacheFilePath()
             );
-            $this->app->registerModule($lang['offers'], dirname(__DIR__) . '/module/sOfferModule.php', $lang['offers_icon']);
+            $moduleId = $this->app->registerModule($lang['offers'], dirname(__DIR__) . '/module/sOfferModule.php', $lang['offers_icon']);
+            if (is_string($moduleId)) {
+                $this->app->instance(sOfferController::MODULE_ID_BINDING, $moduleId);
+            }
         }
     }
 
