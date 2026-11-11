@@ -2,13 +2,13 @@
 
 use EvolutionCMS\Facades\UrlProcessor;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
@@ -36,14 +36,17 @@ class sOfferController
     }
 
     /**
-     * Render the package route entry for managers with sOffers access.
+     * Send authorized managers to the registered file module.
      *
-     * @return View
+     * The module processor applies the CMS access checks and prepares the
+     * tabs and other view data for the manager page.
+     *
+     * @return RedirectResponse
      */
-    public function index(): View
+    public function index(): RedirectResponse
     {
         self::requirePermission('soffers');
-        return $this->view('index');
+        return new RedirectResponse(EVO_MANAGER_URL . $this->url);
     }
 
     /**

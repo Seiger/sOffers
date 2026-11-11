@@ -234,7 +234,6 @@ switch ($data['get']) {
             evo()->setConfig('s_offers_resource', $resource);
         }
         evo()->clearCache('full');
-        sleep(10);
 
         $back = request()->back ?? '&get=settings';
         return header('Location: ' . $sOfferController->url . $back);

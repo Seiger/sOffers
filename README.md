@@ -10,35 +10,34 @@
 
 **sOffers** Module for records management in the Evolution CMS admin panel.
 
-## Install by artisan package installer
+## Requirements
 
-Run in you /core/ folder:
+Install sOffers in an existing Evolution CMS installation. The Composer constraints
+are Evolution CMS `^3.5.7` and PHP `^8.3`. The Evolution CMS 3.5.7 baseline provides
+the manager APIs and Illuminate 12 components used by this package. sLang is optional.
+
+## Install by Artisan package installer
+
+Run these commands from the Evolution CMS `core/` directory:
 
 ```console
 php artisan package:installrequire seiger/soffers "*"
 ```
 
-Generate the config file in **core/custom/config/cms/settings** with 
-name **soffer.php** the file should return a 
-comma-separated list of templates.
+The installer adds the dependency to `core/custom/composer.json`. Evolution CMS
+discovers `sOfferServiceProvider` from the package's `extra.laravel.providers` metadata.
+
+Publish the configuration and apply the package migrations:
 
 ```console
 php artisan vendor:publish --provider="Seiger\sOffers\sOfferServiceProvider"
-```
-
-Run make DB structure with command:
-
-```console
 php artisan migrate
 ```
 
 ## Configure
 
-Templates for displaying gallery tabs are configured in the 
-
-```console
-core/custom/config/cms/settings/sOffers.php
-```
+The published `core/custom/config/cms/settings/sOffer.php` returns the offer field
+definitions. The manager settings form updates this file.
 
 ## Manager permissions
 
@@ -51,6 +50,10 @@ explicitly and refresh their manager sessions after changing permissions.
 Every module action requires an authenticated manager, `exec_module`, `soffers`,
 and the CMS file-module access checks. These are module-wide action permissions;
 the package does not define per-offer access groups.
+
+The manager GET `/soffer` entry redirects to the registered file module. Offer
+editing, deletion and translation forms submit to file-module actions. The obsolete
+upload, gallery, delete and translation route declarations have been removed.
 
 | Permission | Allowed operation |
 | --- | --- |
@@ -81,6 +84,9 @@ Database rollback requires a transactional `system_settings` table. File/databas
 coordination restores the previous file on caught failures; it cannot provide a
 distributed transaction across a process crash or a lost database commit acknowledgement.
 The configuration directory must remain trusted and unavailable for writes by other users.
+
+The `sOffer` model guards all attributes from Eloquent mass assignment. The module
+sets individual offer and TV attributes after checking the action permission.
 
 ## Feature editing and languages
 
@@ -141,8 +147,8 @@ the Blade templates without rendering them or bootstrapping the CMS:
 php tests/compile-views.php /path/to/cms/core/vendor
 ```
 
-P1 checks use a fake CMS and SQLite `:memory:` with installed Illuminate components;
-they do not connect to a live database or run CMS migrations:
+The manager, feature and model checks use a fake CMS and SQLite `:memory:`
+with installed Illuminate components:
 
 ```console
 php tests/p1-regression.php /path/to/cms/core/vendor

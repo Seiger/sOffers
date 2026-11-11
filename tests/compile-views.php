@@ -29,8 +29,11 @@ spl_autoload_register(function ($class) use ($prefixes) {
 });
 require_once $vendor . '/illuminate/collections/helpers.php';
 require_once $vendor . '/illuminate/support/helpers.php';
-if (is_file($vendor . '/symfony/polyfill-php85/bootstrap.php')) {
-    require_once $vendor . '/symfony/polyfill-php85/bootstrap.php';
+foreach (['php84', 'php85'] as $polyfill) {
+    $bootstrap = $vendor . '/symfony/polyfill-' . $polyfill . '/bootstrap.php';
+    if (is_file($bootstrap)) {
+        require_once $bootstrap;
+    }
 }
 $compiler = new Illuminate\View\Compilers\BladeCompiler(new Illuminate\Filesystem\Filesystem(), sys_get_temp_dir());
 $files = glob(dirname(__DIR__) . '/views/*.blade.php');
